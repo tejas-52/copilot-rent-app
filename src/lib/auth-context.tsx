@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState, type ReactNode } from "
 import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
+import { setAppLanguage } from "@/lib/i18n";
 
 export type Profile = {
   id: string;
@@ -12,6 +13,7 @@ export type Profile = {
   employment_status: string | null;
   photo_url: string | null;
   onboarding_completed: boolean;
+  preferred_language?: string | null;
 };
 
 const DEMO_PROFILE: Profile = {
@@ -23,6 +25,7 @@ const DEMO_PROFILE: Profile = {
   employment_status: "Employee",
   photo_url: null,
   onboarding_completed: true,
+  preferred_language: "en",
 };
 
 type AuthCtx = {
@@ -69,7 +72,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const loadProfile = async (uid: string) => {
     const { data } = await supabase.from("profiles").select("*").eq("id", uid).maybeSingle();
-    if (data) setProfile(data as Profile);
+    if (data) {
+      setProfile(data as Profile);
+      const lang = (data as any).preferred_language;
+      if (lang) void setAppLanguage(lang);
+    }
   };
 
   useEffect(() => {

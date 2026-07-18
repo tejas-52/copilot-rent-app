@@ -155,6 +155,34 @@ export function AppLayout({ children }: { children?: ReactNode }) {
           ))}
         </div>
       </nav>
+
+      {/* Floating AI assistant */}
+      <FloatingAI />
     </div>
   );
 }
+
+function FloatingAI() {
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  if (pathname === "/assistant") return null;
+  return (
+    <Link
+      to="/assistant"
+      aria-label="Open AI assistant"
+      className="fixed right-4 z-50 grid h-14 w-14 place-items-center rounded-full text-primary-foreground breathe md:right-8 md:bottom-8"
+      style={{
+        bottom: "calc(env(safe-area-inset-bottom) + 76px)",
+        background: "linear-gradient(135deg, #2563EB, #3B82F6)",
+      }}
+    >
+      <motion.span
+        animate={{ rotate: [0, 8, -8, 0] }}
+        transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+        className="grid place-items-center"
+      >
+        <Bot className="h-6 w-6" strokeWidth={2.2} />
+      </motion.span>
+    </Link>
+  );
+}
+

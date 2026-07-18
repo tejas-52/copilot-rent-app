@@ -202,16 +202,18 @@ export const Route = createFileRoute("/api/chat")({
           system,
           messages: await convertToModelMessages(body.messages),
           stopWhen: stepCountIs(6),
-          tools: {
-            web_search: tool({
-              description:
-                "Search the public web via Tavily for information NOT in the user's rental application data (e.g. rental laws, visa rules, city regulations, employer verification requirements).",
-              inputSchema: z.object({
-                query: z.string().describe("Focused search query in English."),
-              }),
-              execute: async ({ query }) => tavilySearch(query),
-            }),
-          },
+          tools: allowWebTool
+            ? {
+                web_search: tool({
+                  description:
+                    "Fallback web search via Tavily. Use ONLY if the pre-fetched web context is missing or insufficient for information not in the user's rental data (rental laws, visa rules, city regulations, employer verification requirements).",
+                  inputSchema: z.object({
+                    query: z.string().describe("Focused search query in English."),
+                  }),
+                  execute: async ({ query }) => tavilySearch(query),
+                }),
+              }
+            : {},
           onFinish: async ({ text }) => {
             if (!authed || !appId) return;
             try {

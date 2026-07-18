@@ -197,6 +197,26 @@ function AssistantPage() {
     if (!trimmed || thinking) return;
     setInput("");
     if (voiceConvoRef.current) setUserTranscript(trimmed);
+    if (isDemo) {
+      const userMsg: UIMessage = {
+        id: `demo-u-${Date.now()}`,
+        role: "user",
+        parts: [{ type: "text", text: trimmed }],
+      };
+      setMessages((prev) => [...prev, userMsg]);
+      void (async () => {
+        const { demoReplyFor } = await import("@/lib/demo-data");
+        const reply = demoReplyFor(trimmed);
+        await new Promise((r) => setTimeout(r, 650));
+        const assistantMsg: UIMessage = {
+          id: `demo-a-${Date.now()}`,
+          role: "assistant",
+          parts: [{ type: "text", text: reply }],
+        };
+        setMessages((prev) => [...prev, assistantMsg]);
+      })();
+      return;
+    }
     void sendMessage({ text: trimmed });
   };
 

@@ -13,7 +13,7 @@ import { useTranslation } from "react-i18next";
 import { AppLayout } from "@/components/app-layout";
 import { SectionHeader, Stagger, StaggerItem } from "@/components/ui-bits";
 import { useAuth } from "@/lib/auth-context";
-import { useAppState, useEmptyAppState } from "@/lib/app-queries";
+import { useAppState } from "@/lib/app-queries";
 
 export const Route = createFileRoute("/profile")({
   head: () => ({
@@ -29,7 +29,7 @@ function ProfilePage() {
   const { t } = useTranslation();
   const { displayName, initials, profile } = useAuth();
   const { data } = useAppState();
-  const state = data ?? useEmptyAppState();
+  const state = data ?? emptyAppState;
   const { profileSummary, confidence } = state;
 
   const dash = "—";

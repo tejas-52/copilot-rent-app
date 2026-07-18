@@ -9,6 +9,7 @@ import {
   Settings as SettingsIcon,
   Sparkles,
   User,
+  Wand2,
 } from "lucide-react";
 import type { ReactNode } from "react";
 import { toast } from "sonner";

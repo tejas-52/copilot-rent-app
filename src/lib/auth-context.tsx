@@ -13,7 +13,7 @@ export type Profile = {
   employment_status: string | null;
   photo_url: string | null;
   onboarding_completed: boolean;
-  preferred_language?: string | null;
+  preferred_language?: string;
 };
 
 const DEMO_PROFILE: Profile = {

@@ -222,10 +222,7 @@ function UploadModal({ doc, onClose }: { doc: DocumentItem; onClose: () => void 
                 exit={{ opacity: 0 }}
               >
                 <button
-                  onClick={() => {
-                    setPhase("reading");
-                    setStep(0);
-                  }}
+                  onClick={() => fileRef.current?.click()}
                   className="relative flex w-full flex-col items-center justify-center gap-3 rounded-3xl border-2 border-dashed border-border bg-background/60 p-10 text-center transition-colors hover:border-primary/60 hover:bg-accent/40"
                 >
                   <motion.div
@@ -242,21 +239,25 @@ function UploadModal({ doc, onClose }: { doc: DocumentItem; onClose: () => void 
                     </div>
                   </div>
                 </button>
+                <input
+                  ref={fileRef}
+                  type="file"
+                  accept="image/*,application/pdf"
+                  className="hidden"
+                  onChange={(e) => {
+                    const f = e.target.files?.[0];
+                    if (f) void handleFile(f);
+                  }}
+                />
                 <div className="mt-3 grid grid-cols-2 gap-2">
                   <button
-                    onClick={() => {
-                      setPhase("reading");
-                      setStep(0);
-                    }}
+                    onClick={() => fileRef.current?.click()}
                     className="inline-flex items-center justify-center gap-2 rounded-2xl border border-border bg-background px-4 py-3 text-sm font-semibold hover:bg-accent"
                   >
                     <Camera className="h-4 w-4" /> Use camera
                   </button>
                   <button
-                    onClick={() => {
-                      setPhase("reading");
-                      setStep(0);
-                    }}
+                    onClick={() => fileRef.current?.click()}
                     className="inline-flex items-center justify-center gap-2 rounded-2xl gradient-primary px-4 py-3 text-sm font-semibold text-primary-foreground shadow-glow"
                   >
                     Choose file

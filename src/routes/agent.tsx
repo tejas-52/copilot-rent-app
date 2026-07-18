@@ -401,6 +401,7 @@ function AgentPage() {
           )}
         </div>
       </div>
+      )}
     </AppLayout>
   );
 }

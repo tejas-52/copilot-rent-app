@@ -388,9 +388,13 @@ export function useAppState() {
   return useQuery<AppState>({
     queryKey: ["app-state", key],
     enabled: !!user || isDemo,
-    staleTime: 15_000,
+    staleTime: isDemo ? Infinity : 15_000,
     queryFn: async () => {
-      if (!user || isDemo) return EMPTY_STATE;
+      if (isDemo) {
+        const { DEMO_APP_STATE } = await import("@/lib/demo-data");
+        return DEMO_APP_STATE;
+      }
+      if (!user) return EMPTY_STATE;
       const { data: app } = await supabase
         .from("applications")
         .select("*")

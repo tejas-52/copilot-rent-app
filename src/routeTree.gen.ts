@@ -22,6 +22,8 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthSignupRouteImport } from './routes/auth.signup'
 import { Route as AuthResetPasswordRouteImport } from './routes/auth.reset-password'
 import { Route as AuthForgotRouteImport } from './routes/auth.forgot'
+import { Route as ApiTtsRouteImport } from './routes/api/tts'
+import { Route as ApiSttRouteImport } from './routes/api/stt'
 import { Route as ApiChatRouteImport } from './routes/api/chat'
 
 const WelcomeRoute = WelcomeRouteImport.update({
@@ -89,6 +91,16 @@ const AuthForgotRoute = AuthForgotRouteImport.update({
   path: '/forgot',
   getParentRoute: () => AuthRoute,
 } as any)
+const ApiTtsRoute = ApiTtsRouteImport.update({
+  id: '/api/tts',
+  path: '/api/tts',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiSttRoute = ApiSttRouteImport.update({
+  id: '/api/stt',
+  path: '/api/stt',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiChatRoute = ApiChatRouteImport.update({
   id: '/api/chat',
   path: '/api/chat',
@@ -107,6 +119,8 @@ export interface FileRoutesByFullPath {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/welcome': typeof WelcomeRoute
   '/api/chat': typeof ApiChatRoute
+  '/api/stt': typeof ApiSttRoute
+  '/api/tts': typeof ApiTtsRoute
   '/auth/forgot': typeof AuthForgotRoute
   '/auth/reset-password': typeof AuthResetPasswordRoute
   '/auth/signup': typeof AuthSignupRoute
@@ -123,6 +137,8 @@ export interface FileRoutesByTo {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/welcome': typeof WelcomeRoute
   '/api/chat': typeof ApiChatRoute
+  '/api/stt': typeof ApiSttRoute
+  '/api/tts': typeof ApiTtsRoute
   '/auth/forgot': typeof AuthForgotRoute
   '/auth/reset-password': typeof AuthResetPasswordRoute
   '/auth/signup': typeof AuthSignupRoute
@@ -140,6 +156,8 @@ export interface FileRoutesById {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/welcome': typeof WelcomeRoute
   '/api/chat': typeof ApiChatRoute
+  '/api/stt': typeof ApiSttRoute
+  '/api/tts': typeof ApiTtsRoute
   '/auth/forgot': typeof AuthForgotRoute
   '/auth/reset-password': typeof AuthResetPasswordRoute
   '/auth/signup': typeof AuthSignupRoute
@@ -158,6 +176,8 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/welcome'
     | '/api/chat'
+    | '/api/stt'
+    | '/api/tts'
     | '/auth/forgot'
     | '/auth/reset-password'
     | '/auth/signup'
@@ -174,6 +194,8 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/welcome'
     | '/api/chat'
+    | '/api/stt'
+    | '/api/tts'
     | '/auth/forgot'
     | '/auth/reset-password'
     | '/auth/signup'
@@ -190,6 +212,8 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/welcome'
     | '/api/chat'
+    | '/api/stt'
+    | '/api/tts'
     | '/auth/forgot'
     | '/auth/reset-password'
     | '/auth/signup'
@@ -207,6 +231,8 @@ export interface RootRouteChildren {
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   WelcomeRoute: typeof WelcomeRoute
   ApiChatRoute: typeof ApiChatRoute
+  ApiSttRoute: typeof ApiSttRoute
+  ApiTtsRoute: typeof ApiTtsRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -302,6 +328,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthForgotRouteImport
       parentRoute: typeof AuthRoute
     }
+    '/api/tts': {
+      id: '/api/tts'
+      path: '/api/tts'
+      fullPath: '/api/tts'
+      preLoaderRoute: typeof ApiTtsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/stt': {
+      id: '/api/stt'
+      path: '/api/stt'
+      fullPath: '/api/stt'
+      preLoaderRoute: typeof ApiSttRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/chat': {
       id: '/api/chat'
       path: '/api/chat'
@@ -338,17 +378,9 @@ const rootRouteChildren: RootRouteChildren = {
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   WelcomeRoute: WelcomeRoute,
   ApiChatRoute: ApiChatRoute,
+  ApiSttRoute: ApiSttRoute,
+  ApiTtsRoute: ApiTtsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

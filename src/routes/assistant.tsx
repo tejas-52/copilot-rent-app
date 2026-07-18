@@ -1,9 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowUp, Bot, Sparkles, User } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, type UIMessage } from "ai";
+import { useTranslation } from "react-i18next";
 import { AppLayout } from "@/components/app-layout";
 import { SectionHeader } from "@/components/ui-bits";
 
@@ -20,28 +21,32 @@ export const Route = createFileRoute("/assistant")({
   component: AssistantPage,
 });
 
-const suggestions = [
-  "Why isn't my application ready?",
-  "Explain my rental confidence score.",
-  "What documents am I missing?",
-  "How can I improve my score?",
-];
+function AssistantPage() {
+  const { t, i18n } = useTranslation();
+  const language = i18n.language?.split("-")[0] ?? "en";
 
-const initialMessages: UIMessage[] = [
-  {
-    id: "welcome",
-    role: "assistant",
-    parts: [
+  const suggestions = [
+    t("assistant.suggestions.why"),
+    t("assistant.suggestions.score"),
+    t("assistant.suggestions.missing"),
+    t("assistant.suggestions.improve"),
+  ];
+
+  const initialMessages: UIMessage[] = useMemo(
+    () => [
       {
-        type: "text",
-        text: "Hi — I'm your RentReady copilot. Ask me anything about your application, or tap a suggestion below.",
+        id: "welcome",
+        role: "assistant",
+        parts: [{ type: "text", text: t("assistant.welcome") }],
       },
     ],
-  },
-];
+    [t],
+  );
 
-function AssistantPage() {
-  const transport = useRef(new DefaultChatTransport({ api: "/api/chat" })).current;
+  const transport = useMemo(
+    () => new DefaultChatTransport({ api: "/api/chat", body: { language } }),
+    [language],
+  );
   const { messages, sendMessage, status } = useChat({
     id: "assistant",
     messages: initialMessages,
@@ -65,9 +70,9 @@ function AssistantPage() {
   return (
     <AppLayout>
       <SectionHeader
-        eyebrow="Copilot"
-        title="Ask your AI assistant"
-        subtitle="Grounded in your uploaded documents. Always warm, never robotic."
+        eyebrow={t("nav.assistant")}
+        title={t("assistant.title")}
+        subtitle={t("assistant.subtitle")}
       />
 
       <div className="grid gap-4 md:grid-cols-[1fr_260px]">

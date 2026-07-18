@@ -40,6 +40,7 @@ const MAX_BYTES = 12 * 1024 * 1024;
 function AgentPage() {
   const { t } = useTranslation();
   const inputRef = useRef<HTMLInputElement>(null);
+  const [mode, setMode] = useState<"upload" | "autopilot">("upload");
   const [file, setFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);

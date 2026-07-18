@@ -16,7 +16,9 @@ import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { AppLayout } from "@/components/app-layout";
 import { SectionHeader } from "@/components/ui-bits";
+import { AutopilotPanel } from "@/components/autopilot-panel";
 import { runApplicationAgent, type AgentField, type AgentResult } from "@/lib/agent.functions";
+import { FileText as FileTextIcon, Globe as GlobeIcon } from "lucide-react";
 
 export const Route = createFileRoute("/agent")({
   head: () => ({

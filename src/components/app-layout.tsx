@@ -1,15 +1,20 @@
-import { Link, Outlet, useRouterState } from "@tanstack/react-router";
+import { Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
 import { motion } from "framer-motion";
 import {
   Bot,
   FileCheck2,
   FolderOpen,
   Home as HomeIcon,
+  LogOut,
+  Settings as SettingsIcon,
   Sparkles,
   User,
 } from "lucide-react";
 import type { ReactNode } from "react";
+import { toast } from "sonner";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useAuth } from "@/lib/auth-context";
+import { AuthGate } from "@/components/auth-gate";
 
 const nav = [
   { to: "/", label: "Home", icon: HomeIcon, exact: true },
@@ -83,6 +88,15 @@ function NavItem({
 
 export function AppLayout({ children }: { children?: ReactNode }) {
   return (
+    <AuthGate>
+      <AppShell>{children}</AppShell>
+    </AuthGate>
+  );
+}
+
+function AppShell({ children }: { children?: ReactNode }) {
+  const { initials } = useAuth();
+  return (
     <div className="relative min-h-dvh bg-background">
       {/* Ambient gradient */}
       <div
@@ -110,19 +124,22 @@ export function AppLayout({ children }: { children?: ReactNode }) {
             ))}
           </nav>
 
-          <div className="mt-auto rounded-2xl border border-border/60 bg-card p-4">
-            <div className="text-xs font-medium text-muted-foreground">
-              Rental Confidence
+          <div className="mt-auto space-y-3">
+            <div className="rounded-2xl border border-border/60 bg-card p-4">
+              <div className="text-xs font-medium text-muted-foreground">
+                Rental Confidence
+              </div>
+              <div className="mt-1 text-2xl font-semibold tracking-tight">94%</div>
+              <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-muted">
+                <motion.div
+                  initial={{ width: 0 }}
+                  animate={{ width: "94%" }}
+                  transition={{ duration: 1.2, ease: [0.2, 0.8, 0.2, 1] }}
+                  className="h-full rounded-full gradient-primary"
+                />
+              </div>
             </div>
-            <div className="mt-1 text-2xl font-semibold tracking-tight">94%</div>
-            <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-muted">
-              <motion.div
-                initial={{ width: 0 }}
-                animate={{ width: "94%" }}
-                transition={{ duration: 1.2, ease: [0.2, 0.8, 0.2, 1] }}
-                className="h-full rounded-full gradient-primary"
-              />
-            </div>
+            <UserMenu />
           </div>
         </aside>
 
@@ -140,7 +157,7 @@ export function AppLayout({ children }: { children?: ReactNode }) {
               to="/profile"
               className="grid h-9 w-9 place-items-center rounded-full bg-accent text-xs font-semibold text-accent-foreground"
             >
-              JC
+              {initials}
             </Link>
           </div>
 
@@ -159,6 +176,47 @@ export function AppLayout({ children }: { children?: ReactNode }) {
 
       {/* Floating AI assistant */}
       <FloatingAI />
+    </div>
+  );
+}
+
+function UserMenu() {
+  const { displayName, profile, initials, isDemo, signOut } = useAuth();
+  const navigate = useNavigate();
+  const email = isDemo ? "Demo mode" : profile?.email ?? "";
+  const handleSignOut = async () => {
+    await signOut();
+    toast.success("Signed out");
+    navigate({ to: "/auth", replace: true });
+  };
+  return (
+    <div className="rounded-2xl border border-border/60 bg-card p-3">
+      <Link
+        to="/profile"
+        className="flex items-center gap-3 rounded-xl p-1.5 hover:bg-accent/50"
+      >
+        <div className="grid h-9 w-9 place-items-center rounded-full gradient-primary text-xs font-semibold text-primary-foreground">
+          {initials}
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="truncate text-sm font-semibold">{displayName}</div>
+          <div className="truncate text-[11px] text-muted-foreground">{email}</div>
+        </div>
+      </Link>
+      <div className="mt-2 flex items-center gap-1">
+        <Link
+          to="/settings"
+          className="flex flex-1 items-center gap-2 rounded-lg px-2 py-1.5 text-xs font-medium text-muted-foreground hover:bg-accent/50 hover:text-foreground"
+        >
+          <SettingsIcon className="h-3.5 w-3.5" /> Settings
+        </Link>
+        <button
+          onClick={handleSignOut}
+          className="flex items-center gap-2 rounded-lg px-2 py-1.5 text-xs font-medium text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+        >
+          <LogOut className="h-3.5 w-3.5" /> Logout
+        </button>
+      </div>
     </div>
   );
 }

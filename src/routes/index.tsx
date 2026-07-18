@@ -12,6 +12,7 @@ import {
   Zap,
 } from "lucide-react";
 import { AppLayout } from "@/components/app-layout";
+import { useAuth } from "@/lib/auth-context";
 import { AITimeline } from "@/components/ai-timeline";
 import { ConfidenceRing } from "@/components/confidence-ring";
 import { FadeIn, SectionHeader, Stagger, StaggerItem } from "@/components/ui-bits";
@@ -72,6 +73,7 @@ function greet() {
 
 function Dashboard() {
   const recent = documents.filter((d) => d.status === "verified").slice(0, 3);
+  const { firstName } = useAuth();
 
 
   return (
@@ -82,7 +84,7 @@ function Dashboard() {
           <div className="flex items-end justify-between gap-4">
             <div>
               <div className="text-sm text-muted-foreground">
-                {greet()}, {profile.firstName} 👋
+                {greet()}, {firstName} 👋
               </div>
               <h1 className="mt-1 text-2xl font-semibold tracking-tight md:text-[32px]">
                 Let's get you rental ready.

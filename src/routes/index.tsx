@@ -5,11 +5,14 @@ import {
   ArrowUpRight,
   CheckCircle2,
   ChevronRight,
+  Clock,
   Lock,
   Sparkles,
   Upload,
+  Zap,
 } from "lucide-react";
 import { AppLayout } from "@/components/app-layout";
+import { AITimeline } from "@/components/ai-timeline";
 import { ConfidenceRing } from "@/components/confidence-ring";
 import { FadeIn, SectionHeader, Stagger, StaggerItem } from "@/components/ui-bits";
 import {
@@ -20,6 +23,26 @@ import {
   journey,
   profile,
 } from "@/lib/app-data";
+
+const heroChecklist = [
+  { name: "Identity", done: true },
+  { name: "Employment", done: true },
+  { name: "Income", done: true },
+  { name: "Residence", done: false },
+];
+
+const activityFeed = [
+  { icon: CheckCircle2, tone: "success", text: "Passport verified", meta: "98%" },
+  { icon: CheckCircle2, tone: "success", text: "Salary verified", meta: "£6,420/mo" },
+  { icon: CheckCircle2, tone: "success", text: "Visa valid until 2028", meta: "" },
+  { icon: Zap, tone: "warn", text: "Utility bill missing", meta: "+4%" },
+  { icon: CheckCircle2, tone: "success", text: "No inconsistencies detected", meta: "" },
+];
+
+const smartChecklist = [
+  { name: "Upload Utility Bill", eta: "15 sec", impact: 4 },
+  { name: "Add Rental Reference", eta: "20 sec", impact: 2 },
+];
 
 export const Route = createFileRoute("/")({
   head: () => ({

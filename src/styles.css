@@ -44,7 +44,7 @@
 :root {
   --radius: 1rem;
 
-  --background: oklch(0.985 0.001 250);
+  --background: oklch(0.982 0.004 250); /* #F8FAFC feel */
   --foreground: oklch(0.18 0.02 265);
 
   --surface: oklch(0.97 0.003 250);
@@ -201,7 +201,11 @@
 }
 
 @utility gradient-primary {
-  background: var(--gradient-primary);
+  background: linear-gradient(135deg, #2563eb, #3b82f6);
+}
+
+@utility gradient-hero {
+  background: linear-gradient(135deg, #ffffff 0%, #f5f9ff 100%);
 }
 
 @utility text-gradient {
@@ -210,3 +214,50 @@
   background-clip: text;
   color: transparent;
 }
+
+@utility card-lift {
+  transition:
+    transform 300ms cubic-bezier(0.2, 0.8, 0.2, 1),
+    box-shadow 300ms cubic-bezier(0.2, 0.8, 0.2, 1),
+    border-color 300ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+@utility card-lift-hover {
+  &:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 24px 48px -22px color-mix(in oklab, #2563eb 32%, transparent);
+    border-color: color-mix(in oklab, #2563eb 40%, var(--border));
+  }
+}
+
+@utility btn-primary-premium {
+  background: linear-gradient(135deg, #2563eb, #3b82f6);
+  color: var(--primary-foreground);
+  transition:
+    transform 250ms cubic-bezier(0.2, 0.8, 0.2, 1),
+    box-shadow 250ms cubic-bezier(0.2, 0.8, 0.2, 1),
+    filter 250ms ease;
+  box-shadow: 0 10px 30px -12px color-mix(in oklab, #2563eb 55%, transparent);
+  &:hover {
+    transform: scale(1.03);
+    box-shadow: 0 18px 42px -14px color-mix(in oklab, #2563eb 65%, transparent);
+    filter: brightness(1.03);
+  }
+  &:active {
+    transform: scale(0.98);
+  }
+}
+
+@utility breathe {
+  animation: breathe 3.2s ease-in-out infinite;
+}
+@keyframes breathe {
+  0%, 100% {
+    box-shadow: 0 10px 30px -10px color-mix(in oklab, #2563eb 55%, transparent),
+      0 0 0 0 color-mix(in oklab, #2563eb 30%, transparent);
+  }
+  50% {
+    box-shadow: 0 14px 38px -10px color-mix(in oklab, #2563eb 65%, transparent),
+      0 0 0 10px color-mix(in oklab, #2563eb 0%, transparent);
+  }
+}
+

@@ -9,6 +9,7 @@ import {
   User,
 } from "lucide-react";
 import type { ReactNode } from "react";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const nav = [
   { to: "/", label: "Home", icon: HomeIcon, exact: true },
@@ -46,12 +47,17 @@ function NavItem({
         {active && (
           <motion.span
             layoutId="side-active"
-            className="absolute inset-0 rounded-2xl bg-accent"
+            className="absolute inset-0 rounded-2xl border border-primary/15"
+            style={{
+              background:
+                "linear-gradient(135deg, color-mix(in oklab, #2563EB 12%, transparent), color-mix(in oklab, #3B82F6 6%, transparent))",
+            }}
             transition={{ type: "spring", stiffness: 400, damping: 34 }}
           />
         )}
         <Icon
-          className={`relative h-[18px] w-[18px] shrink-0 ${active ? "text-primary" : ""}`}
+          className={`relative h-[18px] w-[18px] shrink-0 transition-transform group-hover:translate-x-0.5 ${active ? "text-primary" : ""}`}
+          strokeWidth={active ? 2.4 : 2}
         />
         <span className={`relative ${active ? "text-foreground" : ""}`}>{label}</span>
       </Link>
@@ -150,6 +156,36 @@ export function AppLayout({ children }: { children?: ReactNode }) {
           ))}
         </div>
       </nav>
+
+      {/* Floating AI assistant */}
+      <FloatingAI />
     </div>
   );
 }
+
+function FloatingAI() {
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const isMobile = useIsMobile();
+  if (pathname === "/assistant") return null;
+  return (
+    <Link
+      to="/assistant"
+      aria-label="Open AI assistant"
+      className="fixed right-4 z-50 grid h-14 w-14 place-items-center rounded-full text-primary-foreground breathe md:right-8"
+      style={{
+        bottom: isMobile ? "calc(env(safe-area-inset-bottom) + 76px)" : "2rem",
+        background: "linear-gradient(135deg, #2563EB, #3B82F6)",
+      }}
+    >
+      <motion.span
+        animate={{ rotate: [0, 8, -8, 0] }}
+        transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+        className="grid place-items-center"
+      >
+        <Bot className="h-6 w-6" strokeWidth={2.2} />
+      </motion.span>
+    </Link>
+  );
+}
+
+

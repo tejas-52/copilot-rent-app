@@ -14,6 +14,162 @@ export type Database = {
   }
   public: {
     Tables: {
+      applications: {
+        Row: {
+          confidence_score: number | null
+          created_at: string
+          id: string
+          status: string
+          summary: Json | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          confidence_score?: number | null
+          created_at?: string
+          id?: string
+          status?: string
+          summary?: Json | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          confidence_score?: number | null
+          created_at?: string
+          id?: string
+          status?: string
+          summary?: Json | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      chat_messages: {
+        Row: {
+          application_id: string | null
+          content: string
+          created_at: string
+          id: string
+          role: string
+          user_id: string
+        }
+        Insert: {
+          application_id?: string | null
+          content: string
+          created_at?: string
+          id?: string
+          role: string
+          user_id: string
+        }
+        Update: {
+          application_id?: string | null
+          content?: string
+          created_at?: string
+          id?: string
+          role?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_messages_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "applications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      documents: {
+        Row: {
+          application_id: string
+          confidence: number | null
+          created_at: string
+          doc_type: string | null
+          error: string | null
+          file_name: string
+          id: string
+          mime_type: string | null
+          status: string
+          storage_path: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          application_id: string
+          confidence?: number | null
+          created_at?: string
+          doc_type?: string | null
+          error?: string | null
+          file_name: string
+          id?: string
+          mime_type?: string | null
+          status?: string
+          storage_path: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          application_id?: string
+          confidence?: number | null
+          created_at?: string
+          doc_type?: string | null
+          error?: string | null
+          file_name?: string
+          id?: string
+          mime_type?: string | null
+          status?: string
+          storage_path?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "documents_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "applications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      extractions: {
+        Row: {
+          confidence: number | null
+          created_at: string
+          data: Json | null
+          document_id: string
+          id: string
+          ocr_text: string | null
+          user_id: string
+        }
+        Insert: {
+          confidence?: number | null
+          created_at?: string
+          data?: Json | null
+          document_id: string
+          id?: string
+          ocr_text?: string | null
+          user_id: string
+        }
+        Update: {
+          confidence?: number | null
+          created_at?: string
+          data?: Json | null
+          document_id?: string
+          id?: string
+          ocr_text?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "extractions_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           country: string | null
@@ -52,6 +208,105 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      recommendations: {
+        Row: {
+          application_id: string
+          created_at: string
+          id: string
+          items: Json
+          user_id: string
+        }
+        Insert: {
+          application_id: string
+          created_at?: string
+          id?: string
+          items?: Json
+          user_id: string
+        }
+        Update: {
+          application_id?: string
+          created_at?: string
+          id?: string
+          items?: Json
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recommendations_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "applications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reports: {
+        Row: {
+          application_id: string
+          content: Json
+          created_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          application_id: string
+          content: Json
+          created_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          application_id?: string
+          content?: Json
+          created_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reports_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "applications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      validations: {
+        Row: {
+          application_id: string
+          checks: Json
+          created_at: string
+          id: string
+          issues: Json
+          user_id: string
+        }
+        Insert: {
+          application_id: string
+          checks?: Json
+          created_at?: string
+          id?: string
+          issues?: Json
+          user_id: string
+        }
+        Update: {
+          application_id?: string
+          checks?: Json
+          created_at?: string
+          id?: string
+          issues?: Json
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "validations_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "applications"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {

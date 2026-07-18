@@ -38,19 +38,51 @@ export const Route = createFileRoute("/report")({
 function ReportPage() {
   const verified = documents.filter((d) => d.status === "verified");
   const missing = documents.filter((d) => d.status !== "verified");
+  const [landlord, setLandlord] = useState(false);
 
   return (
     <AppLayout>
       <SectionHeader
         eyebrow="Report"
-        title="Your rental application report"
-        subtitle="A single, landlord-ready summary — reviewed by AI."
+        title={landlord ? "Landlord preview" : "Your rental application report"}
+        subtitle={
+          landlord
+            ? "This is exactly what your landlord sees when you share this application."
+            : "A single, landlord-ready summary — reviewed by AI."
+        }
         action={
-          <button className="hidden md:inline-flex items-center gap-2 rounded-full gradient-primary px-5 py-3 text-sm font-semibold text-primary-foreground shadow-glow">
-            <Download className="h-4 w-4" /> Export PDF
-          </button>
+          <div className="hidden md:flex items-center gap-2">
+            <button
+              onClick={() => setLandlord((v) => !v)}
+              className="inline-flex items-center gap-2 rounded-full border border-border bg-background/70 px-5 py-3 text-sm font-semibold transition-colors hover:bg-accent"
+            >
+              <Eye className="h-4 w-4" />
+              {landlord ? "Applicant view" : "Landlord preview"}
+            </button>
+            <button className="inline-flex items-center gap-2 rounded-full gradient-primary px-5 py-3 text-sm font-semibold text-primary-foreground shadow-glow">
+              <Download className="h-4 w-4" /> Export PDF
+            </button>
+          </div>
         }
       />
+
+      <AnimatePresence>
+        {landlord && (
+          <motion.div
+            initial={{ opacity: 0, y: -6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -6 }}
+            className="mb-4 flex items-center justify-between gap-3 rounded-2xl border border-primary/30 bg-primary/[0.05] px-4 py-3 text-sm"
+          >
+            <span className="font-medium text-primary">
+              Read-only preview · shared securely with landlord
+            </span>
+            <span className="rounded-full bg-success/15 px-2.5 py-1 text-xs font-semibold text-success">
+              Ready to review
+            </span>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <Stagger className="grid gap-4 md:grid-cols-[1fr_1.4fr]">
         <StaggerItem>

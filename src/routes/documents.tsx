@@ -54,17 +54,31 @@ function DocCard({ doc, onOpen }: { doc: DocumentItem; onOpen: (d: DocumentItem)
   const s = statusMeta[doc.status];
   const Icon = doc.icon;
   const SIcon = s.icon;
+  const shell =
+    doc.status === "missing"
+      ? "border-2 border-dashed border-primary/40 bg-card/60 hover:border-primary/70"
+      : doc.status === "issue"
+        ? "border border-warning/50 bg-card hover:border-warning"
+        : "border border-border/60 bg-card";
   return (
     <button
       onClick={() => onOpen(doc)}
-      className="group relative flex h-full min-h-[168px] w-full flex-col rounded-3xl border border-border/60 bg-card p-5 text-left shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-lg"
+      className={`group card-lift card-lift-hover relative flex h-full min-h-[168px] w-full flex-col rounded-3xl p-5 text-left shadow-sm ${shell}`}
     >
       <div className="flex items-start justify-between">
-        <div className="grid h-12 w-12 place-items-center rounded-2xl bg-accent text-accent-foreground">
-          <Icon className="h-5 w-5" />
+        <div
+          className={`grid h-12 w-12 place-items-center rounded-2xl transition-transform group-hover:scale-105 ${
+            doc.status === "missing"
+              ? "gradient-primary text-primary-foreground shadow-glow"
+              : "bg-accent text-accent-foreground"
+          }`}
+        >
+          {doc.status === "missing" ? <Upload className="h-5 w-5" /> : <Icon className="h-5 w-5" />}
         </div>
         <span
-          className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold ${s.className}`}
+          className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold ${s.className} ${
+            doc.status === "pending" ? "animate-pulse" : ""
+          }`}
         >
           <SIcon className="h-3 w-3" /> {s.label}
         </span>
@@ -81,6 +95,7 @@ function DocCard({ doc, onOpen }: { doc: DocumentItem; onOpen: (d: DocumentItem)
     </button>
   );
 }
+
 
 const readingSteps = [
   "Reading document…",

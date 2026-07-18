@@ -3,7 +3,9 @@ import { motion } from "framer-motion";
 import { ArrowRight, Loader2, Sparkles } from "lucide-react";
 import { useState, type FormEvent } from "react";
 import { toast } from "sonner";
+import { useTranslation } from "react-i18next";
 import { useAuth } from "@/lib/auth-context";
+import { LanguageSwitcher } from "@/components/language-switcher";
 
 export const Route = createFileRoute("/auth/signup")({
   head: () => ({
@@ -15,9 +17,10 @@ export const Route = createFileRoute("/auth/signup")({
   component: SignupPage,
 });
 
-const COUNTRIES = ["United Kingdom", "Germany", "United States", "Canada", "Other"];
+const COUNTRIES = ["United Kingdom", "Germany", "United States", "Canada", "India", "Other"];
 
 function SignupPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { signUp } = useAuth();
   const [name, setName] = useState("");
@@ -28,12 +31,12 @@ function SignupPage() {
 
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    if (password.length < 6) return toast.error("Password must be at least 6 characters");
+    if (password.length < 6) return toast.error(t("auth.errors.passwordShort"));
     setBusy(true);
     const { error } = await signUp(name, email, password, country);
     setBusy(false);
     if (error) return toast.error(error);
-    toast.success("Account created — let's get started");
+    toast.success(t("auth.toasts.created"));
     navigate({ to: "/welcome", replace: true });
   };
 

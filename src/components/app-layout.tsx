@@ -46,12 +46,17 @@ function NavItem({
         {active && (
           <motion.span
             layoutId="side-active"
-            className="absolute inset-0 rounded-2xl bg-accent"
+            className="absolute inset-0 rounded-2xl border border-primary/15"
+            style={{
+              background:
+                "linear-gradient(135deg, color-mix(in oklab, #2563EB 12%, transparent), color-mix(in oklab, #3B82F6 6%, transparent))",
+            }}
             transition={{ type: "spring", stiffness: 400, damping: 34 }}
           />
         )}
         <Icon
-          className={`relative h-[18px] w-[18px] shrink-0 ${active ? "text-primary" : ""}`}
+          className={`relative h-[18px] w-[18px] shrink-0 transition-transform group-hover:translate-x-0.5 ${active ? "text-primary" : ""}`}
+          strokeWidth={active ? 2.4 : 2}
         />
         <span className={`relative ${active ? "text-foreground" : ""}`}>{label}</span>
       </Link>

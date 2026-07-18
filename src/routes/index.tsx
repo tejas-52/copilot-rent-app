@@ -5,11 +5,14 @@ import {
   ArrowUpRight,
   CheckCircle2,
   ChevronRight,
+  Clock,
   Lock,
   Sparkles,
   Upload,
+  Zap,
 } from "lucide-react";
 import { AppLayout } from "@/components/app-layout";
+import { AITimeline } from "@/components/ai-timeline";
 import { ConfidenceRing } from "@/components/confidence-ring";
 import { FadeIn, SectionHeader, Stagger, StaggerItem } from "@/components/ui-bits";
 import {
@@ -20,6 +23,26 @@ import {
   journey,
   profile,
 } from "@/lib/app-data";
+
+const heroChecklist = [
+  { name: "Identity", done: true },
+  { name: "Employment", done: true },
+  { name: "Income", done: true },
+  { name: "Residence", done: false },
+];
+
+const activityFeed = [
+  { icon: CheckCircle2, tone: "success", text: "Passport verified", meta: "98%" },
+  { icon: CheckCircle2, tone: "success", text: "Salary verified", meta: "£6,420/mo" },
+  { icon: CheckCircle2, tone: "success", text: "Visa valid until 2028", meta: "" },
+  { icon: Zap, tone: "warn", text: "Utility bill missing", meta: "+4%" },
+  { icon: CheckCircle2, tone: "success", text: "No inconsistencies detected", meta: "" },
+];
+
+const smartChecklist = [
+  { name: "Upload Utility Bill", eta: "15 sec", impact: 4 },
+  { name: "Add Rental Reference", eta: "20 sec", impact: 2 },
+];
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -49,7 +72,7 @@ function greet() {
 
 function Dashboard() {
   const recent = documents.filter((d) => d.status === "verified").slice(0, 3);
-  const missing = documents.filter((d) => d.status !== "verified");
+
 
   return (
     <AppLayout>
@@ -101,6 +124,25 @@ function Dashboard() {
                   Estimated completion · about 40 seconds
                 </div>
 
+                <div className="mt-5 grid grid-cols-2 gap-2 rounded-2xl border border-border/50 bg-background/60 p-3 sm:grid-cols-4">
+                  {heroChecklist.map((c) => (
+                    <div key={c.name} className="flex items-center gap-2 text-xs">
+                      {c.done ? (
+                        <CheckCircle2 className="h-4 w-4 text-success" />
+                      ) : (
+                        <motion.span
+                          animate={{ scale: [1, 1.15, 1], opacity: [0.7, 1, 0.7] }}
+                          transition={{ duration: 1.6, repeat: Infinity }}
+                          className="h-2 w-2 rounded-full bg-primary"
+                        />
+                      )}
+                      <span className={c.done ? "text-foreground" : "text-primary font-semibold"}>
+                        {c.name}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+
                 <div className="mt-5 flex flex-wrap gap-2">
                   <Link
                     to="/documents"
@@ -121,6 +163,10 @@ function Dashboard() {
           </div>
         </StaggerItem>
 
+        {/* Signature: AI processing timeline */}
+        <StaggerItem>
+          <AITimeline />
+        </StaggerItem>
 
         {/* Journey */}
         <StaggerItem>
@@ -218,7 +264,7 @@ function Dashboard() {
             <div className="h-full rounded-3xl border border-border/60 bg-card p-6">
               <div className="mb-4 flex items-center justify-between">
                 <h3 className="text-lg font-semibold tracking-tight">
-                  Missing documents
+                  Smart checklist
                 </h3>
                 <Link
                   to="/documents"
@@ -228,32 +274,67 @@ function Dashboard() {
                 </Link>
               </div>
               <div className="space-y-2">
-                {missing.slice(0, 4).map((d) => (
+                {smartChecklist.map((s) => (
                   <Link
                     to="/documents"
-                    key={d.id}
-                    className="flex items-center gap-3 rounded-2xl bg-background/60 p-3 transition-colors hover:bg-accent"
+                    key={s.name}
+                    className="group flex items-center gap-3 rounded-2xl border border-dashed border-primary/30 bg-primary/[0.03] p-3 transition-all hover:-translate-y-0.5 hover:border-primary/60 hover:bg-primary/[0.06]"
                   >
-                    <div className="grid h-10 w-10 place-items-center rounded-xl bg-accent text-accent-foreground">
-                      <d.icon className="h-5 w-5" />
+                    <div className="grid h-10 w-10 place-items-center rounded-xl gradient-primary text-primary-foreground shadow-glow">
+                      <Upload className="h-4 w-4" />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <div className="truncate text-sm font-semibold">{d.name}</div>
-                      <div className="text-xs text-muted-foreground">
-                        {d.status === "issue"
-                          ? d.issue
-                          : d.status === "pending"
-                            ? "Waiting for upload"
-                            : "Not uploaded yet"}
+                      <div className="truncate text-sm font-semibold">{s.name}</div>
+                      <div className="mt-0.5 flex items-center gap-2 text-xs text-muted-foreground">
+                        <Clock className="h-3 w-3" /> {s.eta}
                       </div>
                     </div>
-                    <Upload className="h-4 w-4 text-muted-foreground" />
+                    <span className="rounded-full bg-success/15 px-2.5 py-1 text-xs font-semibold text-success">
+                      +{s.impact}%
+                    </span>
                   </Link>
                 ))}
               </div>
             </div>
           </StaggerItem>
         </div>
+
+        {/* AI activity feed */}
+        <StaggerItem>
+          <div className="rounded-3xl border border-border/60 bg-card p-6">
+            <div className="mb-4 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Sparkles className="h-4 w-4 text-primary" />
+                <h3 className="text-lg font-semibold tracking-tight">AI activity</h3>
+              </div>
+              <span className="text-xs text-muted-foreground">Live</span>
+            </div>
+            <ul className="space-y-1.5">
+              {activityFeed.map((a, i) => (
+                <motion.li
+                  key={i}
+                  initial={{ opacity: 0, x: -6 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.08 * i, ease: [0.2, 0.8, 0.2, 1] }}
+                  className="flex items-center gap-3 rounded-xl px-2 py-2"
+                >
+                  <a.icon
+                    className={
+                      "h-4 w-4 " +
+                      (a.tone === "success" ? "text-success" : "text-amber-500")
+                    }
+                  />
+                  <span className="flex-1 text-sm">{a.text}</span>
+                  {a.meta && (
+                    <span className="text-xs font-semibold text-muted-foreground tabular-nums">
+                      {a.meta}
+                    </span>
+                  )}
+                </motion.li>
+              ))}
+            </ul>
+          </div>
+        </StaggerItem>
 
         {/* Recent activity */}
         <StaggerItem>

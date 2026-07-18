@@ -4,12 +4,15 @@ import {
   CheckCircle2,
   Circle,
   Download,
+  Eye,
   FileText,
   Sparkles,
 } from "lucide-react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
+import { useState } from "react";
 import { AppLayout } from "@/components/app-layout";
 import { ConfidenceRing } from "@/components/confidence-ring";
+import { ConfidenceRadar } from "@/components/confidence-radar";
 import { SectionHeader, Stagger, StaggerItem } from "@/components/ui-bits";
 import {
   confidence,
@@ -35,19 +38,51 @@ export const Route = createFileRoute("/report")({
 function ReportPage() {
   const verified = documents.filter((d) => d.status === "verified");
   const missing = documents.filter((d) => d.status !== "verified");
+  const [landlord, setLandlord] = useState(false);
 
   return (
     <AppLayout>
       <SectionHeader
         eyebrow="Report"
-        title="Your rental application report"
-        subtitle="A single, landlord-ready summary — reviewed by AI."
+        title={landlord ? "Landlord preview" : "Your rental application report"}
+        subtitle={
+          landlord
+            ? "This is exactly what your landlord sees when you share this application."
+            : "A single, landlord-ready summary — reviewed by AI."
+        }
         action={
-          <button className="hidden md:inline-flex items-center gap-2 rounded-full gradient-primary px-5 py-3 text-sm font-semibold text-primary-foreground shadow-glow">
-            <Download className="h-4 w-4" /> Export PDF
-          </button>
+          <div className="hidden md:flex items-center gap-2">
+            <button
+              onClick={() => setLandlord((v) => !v)}
+              className="inline-flex items-center gap-2 rounded-full border border-border bg-background/70 px-5 py-3 text-sm font-semibold transition-colors hover:bg-accent"
+            >
+              <Eye className="h-4 w-4" />
+              {landlord ? "Applicant view" : "Landlord preview"}
+            </button>
+            <button className="inline-flex items-center gap-2 rounded-full gradient-primary px-5 py-3 text-sm font-semibold text-primary-foreground shadow-glow">
+              <Download className="h-4 w-4" /> Export PDF
+            </button>
+          </div>
         }
       />
+
+      <AnimatePresence>
+        {landlord && (
+          <motion.div
+            initial={{ opacity: 0, y: -6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -6 }}
+            className="mb-4 flex items-center justify-between gap-3 rounded-2xl border border-primary/30 bg-primary/[0.05] px-4 py-3 text-sm"
+          >
+            <span className="font-medium text-primary">
+              Read-only preview · shared securely with landlord
+            </span>
+            <span className="rounded-full bg-success/15 px-2.5 py-1 text-xs font-semibold text-success">
+              Ready to review
+            </span>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <Stagger className="grid gap-4 md:grid-cols-[1fr_1.4fr]">
         <StaggerItem>
@@ -98,6 +133,52 @@ function ReportPage() {
                 </motion.li>
               ))}
             </ol>
+          </div>
+        </StaggerItem>
+
+        <StaggerItem className="md:col-span-2">
+          <div className="grid gap-4 md:grid-cols-[1fr_1.2fr]">
+            <div className="rounded-3xl border border-border/60 bg-card p-6">
+              <div className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.14em] text-primary">
+                <Sparkles className="h-3.5 w-3.5" /> Confidence radar
+              </div>
+              <ConfidenceRadar />
+            </div>
+            <div className="rounded-3xl border border-border/60 bg-card p-6">
+              <div className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.14em] text-primary">
+                <Sparkles className="h-3.5 w-3.5" /> Before AI · After AI
+              </div>
+              <div className="mt-4 space-y-5">
+                {[
+                  { label: "Before AI review", value: 74, tone: "muted" },
+                  { label: "After AI review", value: confidence, tone: "primary" },
+                ].map((row) => (
+                  <div key={row.label}>
+                    <div className="mb-1.5 flex items-center justify-between text-sm">
+                      <span className="text-muted-foreground">{row.label}</span>
+                      <span className="font-semibold tabular-nums">{row.value}%</span>
+                    </div>
+                    <div className="h-3 overflow-hidden rounded-full bg-muted">
+                      <motion.div
+                        initial={{ width: 0 }}
+                        animate={{ width: `${row.value}%` }}
+                        transition={{ duration: 1.2, ease: [0.2, 0.8, 0.2, 1] }}
+                        className={
+                          "h-full rounded-full " +
+                          (row.tone === "primary"
+                            ? "gradient-primary shadow-glow"
+                            : "bg-muted-foreground/30")
+                        }
+                      />
+                    </div>
+                  </div>
+                ))}
+                <div className="rounded-2xl bg-success/10 p-3 text-sm text-success">
+                  <span className="font-semibold">+{confidence - 74}%</span> uplift after
+                  AI cleaned up documents, spotted issues, and structured your profile.
+                </div>
+              </div>
+            </div>
           </div>
         </StaggerItem>
 

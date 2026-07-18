@@ -180,6 +180,7 @@ export type Database = {
           id: string
           onboarding_completed: boolean
           photo_url: string | null
+          preferred_language: string
           rental_country: string | null
           updated_at: string
         }
@@ -192,6 +193,7 @@ export type Database = {
           id: string
           onboarding_completed?: boolean
           photo_url?: string | null
+          preferred_language?: string
           rental_country?: string | null
           updated_at?: string
         }
@@ -204,6 +206,7 @@ export type Database = {
           id?: string
           onboarding_completed?: boolean
           photo_url?: string | null
+          preferred_language?: string
           rental_country?: string | null
           updated_at?: string
         }

@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { motion } from "framer-motion";
 import { ArrowRight, Clock, Sparkles } from "lucide-react";
 import { useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { useAuth } from "@/lib/auth-context";
 import { AuthGate } from "@/components/auth-gate";
 
@@ -15,10 +16,10 @@ export const Route = createFileRoute("/welcome")({
 });
 
 function WelcomePage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { firstName, profile, isDemo } = useAuth();
 
-  // Demo users skip straight through
   useEffect(() => {
     if (isDemo) navigate({ to: "/", replace: true });
   }, [isDemo, navigate]);
@@ -43,22 +44,20 @@ function WelcomePage() {
             <Sparkles className="h-6 w-6" />
           </div>
           <h1 className="mt-6 text-3xl font-semibold tracking-tight md:text-4xl">
-            Welcome{firstName && firstName !== "there" ? `, ${firstName}` : ""}.
+            {t("welcome.greeting")}{firstName && firstName !== "there" ? `, ${firstName}` : ""}.
           </h1>
-          <p className="mt-3 text-base text-muted-foreground">
-            Let's prepare your rental application. We'll walk you through everything.
-          </p>
+          <p className="mt-3 text-base text-muted-foreground">{t("welcome.subtitle")}</p>
 
           <div className="mt-8 inline-flex items-center gap-2 rounded-full border border-border/60 bg-card px-4 py-2 text-sm">
             <Clock className="h-4 w-4 text-primary" />
-            Estimated time · <span className="font-semibold">5 minutes</span>
+            {t("welcome.estimated")} · <span className="font-semibold">{t("welcome.minutes")}</span>
           </div>
 
           <button
             onClick={() => navigate({ to: next })}
             className="btn-primary-premium mt-8 inline-flex w-full items-center justify-center gap-2 rounded-2xl px-6 py-3.5 text-base font-semibold sm:w-auto sm:min-w-[240px]"
           >
-            Continue <ArrowRight className="h-4 w-4" />
+            {t("common.continue")} <ArrowRight className="h-4 w-4" />
           </button>
         </motion.div>
       </div>

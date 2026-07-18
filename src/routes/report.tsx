@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { AppLayout } from "@/components/app-layout";
 import { ConfidenceRing } from "@/components/confidence-ring";
 import { ConfidenceRadar } from "@/components/confidence-radar";
@@ -36,6 +37,7 @@ export const Route = createFileRoute("/report")({
 });
 
 function ReportPage() {
+  const { t } = useTranslation();
   const verified = documents.filter((d) => d.status === "verified");
   const missing = documents.filter((d) => d.status !== "verified");
   const [landlord, setLandlord] = useState(false);
@@ -43,13 +45,9 @@ function ReportPage() {
   return (
     <AppLayout>
       <SectionHeader
-        eyebrow="Report"
-        title={landlord ? "Landlord preview" : "Your rental application report"}
-        subtitle={
-          landlord
-            ? "This is exactly what your landlord sees when you share this application."
-            : "A single, landlord-ready summary — reviewed by AI."
-        }
+        eyebrow={t("nav.report")}
+        title={landlord ? t("report.landlordTitle") : t("report.title")}
+        subtitle={landlord ? t("report.landlordSubtitle") : t("report.subtitle")}
         action={
           <div className="hidden md:flex items-center gap-2">
             <button
@@ -57,10 +55,10 @@ function ReportPage() {
               className="inline-flex items-center gap-2 rounded-full border border-border bg-background/70 px-5 py-3 text-sm font-semibold transition-colors hover:bg-accent"
             >
               <Eye className="h-4 w-4" />
-              {landlord ? "Applicant view" : "Landlord preview"}
+              {landlord ? t("report.applicantView") : t("report.landlordPreview")}
             </button>
             <button className="inline-flex items-center gap-2 rounded-full gradient-primary px-5 py-3 text-sm font-semibold text-primary-foreground shadow-glow">
-              <Download className="h-4 w-4" /> Export PDF
+              <Download className="h-4 w-4" /> {t("report.exportPdf")}
             </button>
           </div>
         }
@@ -74,11 +72,9 @@ function ReportPage() {
             exit={{ opacity: 0, y: -6 }}
             className="mb-4 flex items-center justify-between gap-3 rounded-2xl border border-primary/30 bg-primary/[0.05] px-4 py-3 text-sm"
           >
-            <span className="font-medium text-primary">
-              Read-only preview · shared securely with landlord
-            </span>
+            <span className="font-medium text-primary">{t("report.readOnly")}</span>
             <span className="rounded-full bg-success/15 px-2.5 py-1 text-xs font-semibold text-success">
-              Ready to review
+              {t("report.readyReview")}
             </span>
           </motion.div>
         )}
@@ -92,12 +88,10 @@ function ReportPage() {
             </div>
             <div className="mt-4 rounded-2xl bg-background/60 p-4 text-sm">
               <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.14em] text-primary">
-                <Sparkles className="h-3.5 w-3.5" /> AI Summary
+                <Sparkles className="h-3.5 w-3.5" /> {t("report.aiSummary")}
               </div>
               <p className="mt-2 text-muted-foreground">
-                {profile.name} presents a strong rental profile: verified identity,
-                stable employment at {profile.employment}, and monthly income of{" "}
-                {profile.monthlyIncome}. Two minor items remain before submission.
+                {profile.name} — {profile.employment} · {profile.monthlyIncome}.
               </p>
             </div>
           </div>
@@ -105,12 +99,12 @@ function ReportPage() {
 
         <StaggerItem>
           <div className="h-full rounded-3xl border border-border/60 bg-card p-6">
-            <h3 className="text-lg font-semibold tracking-tight">Application timeline</h3>
+            <h3 className="text-lg font-semibold tracking-tight">{t("report.timeline")}</h3>
             <ol className="relative mt-5 space-y-4 pl-6">
               <span className="absolute left-[10px] top-2 bottom-2 w-px bg-border" />
-              {timeline.map((t, i) => (
+              {timeline.map((step, i) => (
                 <motion.li
-                  key={t.name}
+                  key={step.name}
                   initial={{ opacity: 0, x: -8 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.05 * i }}
@@ -119,16 +113,14 @@ function ReportPage() {
                   <span
                     className={
                       "absolute -left-6 top-0.5 grid h-5 w-5 place-items-center rounded-full " +
-                      (t.done
-                        ? "bg-success text-success-foreground"
-                        : "bg-muted text-muted-foreground")
+                      (step.done ? "bg-success text-success-foreground" : "bg-muted text-muted-foreground")
                     }
                   >
-                    {t.done ? <CheckCircle2 className="h-3.5 w-3.5" /> : <Circle className="h-3 w-3" />}
+                    {step.done ? <CheckCircle2 className="h-3.5 w-3.5" /> : <Circle className="h-3 w-3" />}
                   </span>
                   <div className="flex items-center justify-between gap-3">
-                    <div className="text-sm font-semibold">{t.name}</div>
-                    <div className="text-xs text-muted-foreground">{t.date}</div>
+                    <div className="text-sm font-semibold">{step.name}</div>
+                    <div className="text-xs text-muted-foreground">{step.date}</div>
                   </div>
                 </motion.li>
               ))}
@@ -140,18 +132,18 @@ function ReportPage() {
           <div className="grid gap-4 md:grid-cols-[1fr_1.2fr]">
             <div className="rounded-3xl border border-border/60 bg-card p-6">
               <div className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.14em] text-primary">
-                <Sparkles className="h-3.5 w-3.5" /> Confidence radar
+                <Sparkles className="h-3.5 w-3.5" /> {t("report.radar")}
               </div>
               <ConfidenceRadar />
             </div>
             <div className="rounded-3xl border border-border/60 bg-card p-6">
               <div className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.14em] text-primary">
-                <Sparkles className="h-3.5 w-3.5" /> Before AI · After AI
+                <Sparkles className="h-3.5 w-3.5" /> {t("report.beforeAfter")}
               </div>
               <div className="mt-4 space-y-5">
                 {[
-                  { label: "Before AI review", value: 74, tone: "muted" },
-                  { label: "After AI review", value: confidence, tone: "primary" },
+                  { label: t("report.before"), value: 74, tone: "muted" },
+                  { label: t("report.after"), value: confidence, tone: "primary" },
                 ].map((row) => (
                   <div key={row.label}>
                     <div className="mb-1.5 flex items-center justify-between text-sm">
@@ -174,8 +166,7 @@ function ReportPage() {
                   </div>
                 ))}
                 <div className="rounded-2xl bg-success/10 p-3 text-sm text-success">
-                  <span className="font-semibold">+{confidence - 74}%</span> uplift after
-                  AI cleaned up documents, spotted issues, and structured your profile.
+                  <span className="font-semibold">+{confidence - 74}%</span> {t("report.uplift")}
                 </div>
               </div>
             </div>
@@ -184,17 +175,17 @@ function ReportPage() {
 
         <StaggerItem className="md:col-span-2">
           <div className="rounded-3xl border border-border/60 bg-card p-6">
-            <h3 className="text-lg font-semibold tracking-tight">Application summary</h3>
+            <h3 className="text-lg font-semibold tracking-tight">{t("report.summary")}</h3>
             <dl className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-4">
               {[
-                ["Applicant", profile.name],
-                ["Occupation", profile.occupation],
-                ["Monthly Income", profile.monthlyIncome],
-                ["Visa Status", profile.visa],
-                ["Current Address", profile.address],
-                ["Nationality", profile.nationality],
-                ["Employment", profile.employment],
-                ["Confidence", `${confidence}% · Excellent`],
+                [t("report.fields.applicant"), profile.name],
+                [t("report.fields.occupation"), profile.occupation],
+                [t("report.fields.monthlyIncome"), profile.monthlyIncome],
+                [t("report.fields.visa"), profile.visa],
+                [t("report.fields.address"), profile.address],
+                [t("report.fields.nationality"), profile.nationality],
+                [t("report.fields.employment"), profile.employment],
+                [t("report.fields.confidence"), `${confidence}% · ${t("dashboard.excellentTier")}`],
               ].map(([k, v]) => (
                 <div key={k} className="rounded-2xl bg-background/60 p-3">
                   <dt className="text-[11px] uppercase tracking-wider text-muted-foreground">
@@ -209,7 +200,7 @@ function ReportPage() {
 
         <StaggerItem>
           <div className="h-full rounded-3xl border border-border/60 bg-card p-6">
-            <h3 className="text-lg font-semibold tracking-tight">Verified documents</h3>
+            <h3 className="text-lg font-semibold tracking-tight">{t("report.verifiedDocs")}</h3>
             <ul className="mt-4 space-y-2">
               {verified.map((d) => (
                 <li
@@ -231,7 +222,7 @@ function ReportPage() {
 
         <StaggerItem>
           <div className="h-full rounded-3xl border border-border/60 bg-card p-6">
-            <h3 className="text-lg font-semibold tracking-tight">Recommendations</h3>
+            <h3 className="text-lg font-semibold tracking-tight">{t("report.recommendations")}</h3>
             <ul className="mt-4 space-y-2">
               {missing.map((d) => (
                 <li
@@ -240,7 +231,7 @@ function ReportPage() {
                 >
                   <FileText className="h-5 w-5 text-primary" />
                   <div className="min-w-0 flex-1 truncate text-sm font-medium">
-                    Add {d.name.toLowerCase()}
+                    {t("report.add", { name: d.name.toLowerCase() })}
                   </div>
                 </li>
               ))}
@@ -264,7 +255,7 @@ function ReportPage() {
 
         <StaggerItem className="md:col-span-2 md:hidden">
           <button className="w-full inline-flex items-center justify-center gap-2 rounded-full gradient-primary px-5 py-4 text-sm font-semibold text-primary-foreground shadow-glow">
-            <Download className="h-4 w-4" /> Export PDF
+            <Download className="h-4 w-4" /> {t("report.exportPdf")}
           </button>
         </StaggerItem>
       </Stagger>

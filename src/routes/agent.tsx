@@ -161,7 +161,42 @@ function AgentPage() {
         })}
       />
 
+      {/* Mode switcher */}
+      <div className="mb-4 inline-flex rounded-2xl border border-border/60 bg-card p-1">
+        {([
+          { key: "upload", label: "Upload form", Icon: FileTextIcon },
+          { key: "autopilot", label: "Autopilot (Live)", Icon: GlobeIcon },
+        ] as const).map(({ key, label, Icon }) => (
+          <button
+            key={key}
+            onClick={() => setMode(key)}
+            className={`relative flex items-center gap-2 rounded-xl px-3.5 py-1.5 text-sm font-medium transition-colors ${
+              mode === key ? "text-foreground" : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            {mode === key && (
+              <motion.span
+                layoutId="agent-mode"
+                className="absolute inset-0 rounded-xl bg-background shadow-sm"
+                transition={{ type: "spring", stiffness: 500, damping: 34 }}
+              />
+            )}
+            <Icon className="relative h-3.5 w-3.5" />
+            <span className="relative">{label}</span>
+            {key === "autopilot" && (
+              <span className="relative rounded-full bg-primary/10 px-1.5 py-0.5 text-[10px] font-semibold text-primary">
+                BETA
+              </span>
+            )}
+          </button>
+        ))}
+      </div>
+
+      {mode === "autopilot" ? (
+        <AutopilotPanel />
+      ) : (
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_360px]">
+
         {/* Left: upload + fields */}
         <div className="space-y-4">
           {!result && (

@@ -91,11 +91,21 @@ function AssistantPage() {
 
   const thinking = status === "submitted" || status === "streaming";
 
-  // Load prior chat history
+  // Load prior chat history (or seed a scripted conversation in demo mode)
   useEffect(() => {
     if (historyLoadedRef.current || !isAuthenticated) return;
     historyLoadedRef.current = true;
     (async () => {
+      if (isDemo) {
+        const { DEMO_CHAT } = await import("@/lib/demo-data");
+        const history: UIMessage[] = DEMO_CHAT.map((m) => ({
+          id: m.id,
+          role: m.role,
+          parts: [{ type: "text", text: m.text }],
+        }));
+        setMessages([welcomeMessage, ...history]);
+        return;
+      }
       const { data: app } = await supabase
         .from("applications")
         .select("id")
@@ -117,7 +127,7 @@ function AssistantPage() {
       }));
       setMessages([welcomeMessage, ...history]);
     })();
-  }, [isAuthenticated, setMessages, welcomeMessage]);
+  }, [isAuthenticated, isDemo, setMessages, welcomeMessage]);
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: "smooth" });

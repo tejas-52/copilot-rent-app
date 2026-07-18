@@ -11,6 +11,7 @@ import {
   Upload,
   Zap,
 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { AppLayout } from "@/components/app-layout";
 import { useAuth } from "@/lib/auth-context";
 import { AITimeline } from "@/components/ai-timeline";
@@ -22,28 +23,7 @@ import {
   improvements,
   insights,
   journey,
-  profile,
 } from "@/lib/app-data";
-
-const heroChecklist = [
-  { name: "Identity", done: true },
-  { name: "Employment", done: true },
-  { name: "Income", done: true },
-  { name: "Residence", done: false },
-];
-
-const activityFeed = [
-  { icon: CheckCircle2, tone: "success", text: "Passport verified", meta: "98%" },
-  { icon: CheckCircle2, tone: "success", text: "Salary verified", meta: "£6,420/mo" },
-  { icon: CheckCircle2, tone: "success", text: "Visa valid until 2028", meta: "" },
-  { icon: Zap, tone: "warn", text: "Utility bill missing", meta: "+4%" },
-  { icon: CheckCircle2, tone: "success", text: "No inconsistencies detected", meta: "" },
-];
-
-const smartChecklist = [
-  { name: "Upload Utility Bill", eta: "15 sec", impact: 4 },
-  { name: "Add Rental Reference", eta: "20 sec", impact: 2 },
-];
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -64,16 +44,46 @@ export const Route = createFileRoute("/")({
   component: Dashboard,
 });
 
-function greet() {
-  const h = new Date().getHours();
-  if (h < 12) return "Good morning";
-  if (h < 18) return "Good afternoon";
-  return "Good evening";
-}
-
 function Dashboard() {
+  const { t } = useTranslation();
   const recent = documents.filter((d) => d.status === "verified").slice(0, 3);
   const { firstName } = useAuth();
+
+  const greet = () => {
+    const h = new Date().getHours();
+    if (h < 12) return t("dashboard.goodMorning");
+    if (h < 18) return t("dashboard.goodAfternoon");
+    return t("dashboard.goodEvening");
+  };
+
+  const heroChecklist = [
+    { name: t("dashboard.checklist.identity"), done: true },
+    { name: t("dashboard.checklist.employment"), done: true },
+    { name: t("dashboard.checklist.income"), done: true },
+    { name: t("dashboard.checklist.residence"), done: false },
+  ];
+
+  const activityFeed = [
+    { icon: CheckCircle2, tone: "success", text: t("dashboard.activity.passport"), meta: "98%" },
+    { icon: CheckCircle2, tone: "success", text: t("dashboard.activity.salary"), meta: "£6,420/mo" },
+    { icon: CheckCircle2, tone: "success", text: t("dashboard.activity.visa"), meta: "" },
+    { icon: Zap, tone: "warn", text: t("dashboard.activity.utilityMissing"), meta: "+4%" },
+    { icon: CheckCircle2, tone: "success", text: t("dashboard.activity.noIssues"), meta: "" },
+  ];
+
+  const smartChecklist = [
+    { name: t("dashboard.smart.uploadUtility"), eta: "15 sec", impact: 4 },
+    { name: t("dashboard.smart.addReference"), eta: "20 sec", impact: 2 },
+  ];
+
+  const stepLabels = [
+    t("dashboard.steps.identity"),
+    t("dashboard.steps.income"),
+    t("dashboard.steps.employment"),
+    t("dashboard.steps.residence"),
+    t("dashboard.steps.review"),
+  ];
+
 
 
   return (

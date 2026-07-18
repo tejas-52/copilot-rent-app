@@ -12,22 +12,27 @@ import {
 } from "lucide-react";
 import type { ReactNode } from "react";
 import { toast } from "sonner";
+import { useTranslation } from "react-i18next";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useAuth } from "@/lib/auth-context";
 import { AuthGate } from "@/components/auth-gate";
 
-const nav = [
-  { to: "/", label: "Home", icon: HomeIcon, exact: true },
-  { to: "/documents", label: "Documents", icon: FolderOpen },
-  { to: "/assistant", label: "Assistant", icon: Bot },
-  { to: "/report", label: "Report", icon: FileCheck2 },
-  { to: "/profile", label: "Profile", icon: User },
-] as const;
+function useNav() {
+  const { t } = useTranslation();
+  return [
+    { to: "/", label: t("nav.home"), icon: HomeIcon, exact: true },
+    { to: "/documents", label: t("nav.documents"), icon: FolderOpen },
+    { to: "/assistant", label: t("nav.assistant"), icon: Bot },
+    { to: "/report", label: t("nav.report"), icon: FileCheck2 },
+    { to: "/profile", label: t("nav.profile"), icon: User },
+  ] as const;
+}
 
 function useIsActive(to: string, exact?: boolean) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   return exact ? pathname === to : pathname === to || pathname.startsWith(to + "/");
 }
+
 
 function NavItem({
   to,
@@ -96,6 +101,8 @@ export function AppLayout({ children }: { children?: ReactNode }) {
 
 function AppShell({ children }: { children?: ReactNode }) {
   const { initials } = useAuth();
+  const { t } = useTranslation();
+  const nav = useNav();
   return (
     <div className="relative min-h-dvh bg-background">
       {/* Ambient gradient */}
@@ -127,7 +134,7 @@ function AppShell({ children }: { children?: ReactNode }) {
           <div className="mt-auto space-y-3">
             <div className="rounded-2xl border border-border/60 bg-card p-4">
               <div className="text-xs font-medium text-muted-foreground">
-                Rental Confidence
+                {t("profile.rentalConfidence")}
               </div>
               <div className="mt-1 text-2xl font-semibold tracking-tight">94%</div>
               <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-muted">
@@ -181,12 +188,13 @@ function AppShell({ children }: { children?: ReactNode }) {
 }
 
 function UserMenu() {
+  const { t } = useTranslation();
   const { displayName, profile, initials, isDemo, signOut } = useAuth();
   const navigate = useNavigate();
-  const email = isDemo ? "Demo mode" : profile?.email ?? "";
+  const email = isDemo ? t("common.loading") : profile?.email ?? "";
   const handleSignOut = async () => {
     await signOut();
-    toast.success("Signed out");
+    toast.success(t("auth.toasts.signedOut"));
     navigate({ to: "/auth", replace: true });
   };
   return (
@@ -208,13 +216,13 @@ function UserMenu() {
           to="/settings"
           className="flex flex-1 items-center gap-2 rounded-lg px-2 py-1.5 text-xs font-medium text-muted-foreground hover:bg-accent/50 hover:text-foreground"
         >
-          <SettingsIcon className="h-3.5 w-3.5" /> Settings
+          <SettingsIcon className="h-3.5 w-3.5" /> {t("nav.settings")}
         </Link>
         <button
           onClick={handleSignOut}
           className="flex items-center gap-2 rounded-lg px-2 py-1.5 text-xs font-medium text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
         >
-          <LogOut className="h-3.5 w-3.5" /> Logout
+          <LogOut className="h-3.5 w-3.5" /> {t("common.logout")}
         </button>
       </div>
     </div>

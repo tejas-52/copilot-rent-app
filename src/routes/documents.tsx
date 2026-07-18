@@ -10,8 +10,9 @@ import {
   Upload,
   X,
 } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
+import { useTranslation } from "react-i18next";
 import { AppLayout } from "@/components/app-layout";
 import { SectionHeader, Stagger, StaggerItem } from "@/components/ui-bits";
 import { documents, type DocStatus, type DocumentItem } from "@/lib/app-data";
@@ -32,30 +33,19 @@ export const Route = createFileRoute("/documents")({
   component: DocumentsPage,
 });
 
-const statusMeta: Record<
-  DocStatus,
-  { label: string; className: string; icon: typeof CheckCircle2 }
-> = {
-  verified: {
-    label: "Verified",
-    className: "bg-success/15 text-success",
-    icon: CheckCircle2,
-  },
-  pending: {
-    label: "Pending",
-    className: "bg-muted text-muted-foreground",
-    icon: Clock,
-  },
-  issue: {
-    label: "Needs attention",
-    className: "bg-warning/15 text-warning-foreground",
-    icon: AlertTriangle,
-  },
-  missing: { label: "Not uploaded", className: "bg-accent text-accent-foreground", icon: Circle },
-};
+function useStatusMeta(): Record<DocStatus, { label: string; className: string; icon: typeof CheckCircle2 }> {
+  const { t } = useTranslation();
+  return {
+    verified: { label: t("common.verified"), className: "bg-success/15 text-success", icon: CheckCircle2 },
+    pending: { label: t("common.pending"), className: "bg-muted text-muted-foreground", icon: Clock },
+    issue: { label: t("common.needsAttention"), className: "bg-warning/15 text-warning-foreground", icon: AlertTriangle },
+    missing: { label: t("common.notUploaded"), className: "bg-accent text-accent-foreground", icon: Circle },
+  };
+}
 
 function DocCard({ doc, onOpen }: { doc: DocumentItem; onOpen: (d: DocumentItem) => void }) {
-  const s = statusMeta[doc.status];
+  const { t } = useTranslation();
+  const s = useStatusMeta()[doc.status];
   const Icon = doc.icon;
   const SIcon = s.icon;
   const shell =
@@ -90,10 +80,10 @@ function DocCard({ doc, onOpen }: { doc: DocumentItem; onOpen: (d: DocumentItem)
       <div className="mt-auto pt-5">
         <div className="text-base font-semibold tracking-tight">{doc.name}</div>
         <div className="mt-1 text-xs text-muted-foreground">
-          {doc.status === "verified" && `${doc.confidence}% confidence`}
-          {doc.status === "pending" && "Analyzing…"}
+          {doc.status === "verified" && `${doc.confidence}% ${t("common.confidence").toLowerCase()}`}
+          {doc.status === "pending" && t("documents.analyzing")}
           {doc.status === "issue" && doc.issue}
-          {doc.status === "missing" && "Tap to upload"}
+          {doc.status === "missing" && t("documents.tapToUpload")}
         </div>
       </div>
     </button>
@@ -101,15 +91,18 @@ function DocCard({ doc, onOpen }: { doc: DocumentItem; onOpen: (d: DocumentItem)
 }
 
 
-const readingSteps = [
-  "Reading document…",
-  "Extracting information…",
-  "Checking authenticity…",
-  "Cross-referencing profile…",
-  "Identity verified",
-];
-
 function UploadModal({ doc, onClose }: { doc: DocumentItem; onClose: () => void }) {
+  const { t } = useTranslation();
+  const readingSteps = useMemo(
+    () => [
+      t("documents.steps.reading"),
+      t("documents.steps.extracting"),
+      t("documents.steps.checking"),
+      t("documents.steps.crossReferencing"),
+      t("documents.steps.identityVerified"),
+    ],
+    [t],
+  );
   const [phase, setPhase] = useState<"drop" | "reading" | "done">(
     doc.status === "missing" || doc.status === "pending" ? "drop" : "done",
   );
@@ -157,7 +150,7 @@ function UploadModal({ doc, onClose }: { doc: DocumentItem; onClose: () => void 
       const res = await runPipelineForDocument({
         data: { documentId: registered.id, applicationId: app.id },
       });
-      toast.success(`Verified · confidence ${res.score}%`);
+      toast.success(t("documents.toasts.verified", { score: res.score }));
       // fetch extraction to display
       const { data: ex } = await supabase
         .from("extractions")
@@ -176,7 +169,7 @@ function UploadModal({ doc, onClose }: { doc: DocumentItem; onClose: () => void 
       }
       setPhase("done");
     } catch (e: any) {
-      toast.error(e?.message ?? "Upload failed");
+      toast.error(e?.message ?? t("documents.toasts.uploadFailed"));
       setPhase("drop");
     }
   }
@@ -200,7 +193,7 @@ function UploadModal({ doc, onClose }: { doc: DocumentItem; onClose: () => void 
             <div>
               <div className="text-sm font-semibold">{doc.name}</div>
               <div className="text-xs text-muted-foreground">
-                {phase === "done" ? "Verified by AI" : "Upload securely"}
+                {phase === "done" ? t("common.verifiedByAi") : t("documents.uploadSecurely")}
               </div>
             </div>
           </div>
@@ -233,9 +226,9 @@ function UploadModal({ doc, onClose }: { doc: DocumentItem; onClose: () => void 
                     <Upload className="h-6 w-6" />
                   </motion.div>
                   <div>
-                    <div className="text-base font-semibold">Drop your file here</div>
+                    <div className="text-base font-semibold">{t("documents.dropHere")}</div>
                     <div className="mt-1 text-xs text-muted-foreground">
-                      PDF, PNG, JPG · up to 10 MB
+                      {t("documents.fileHint")}
                     </div>
                   </div>
                 </button>
@@ -254,13 +247,13 @@ function UploadModal({ doc, onClose }: { doc: DocumentItem; onClose: () => void 
                     onClick={() => fileRef.current?.click()}
                     className="inline-flex items-center justify-center gap-2 rounded-2xl border border-border bg-background px-4 py-3 text-sm font-semibold hover:bg-accent"
                   >
-                    <Camera className="h-4 w-4" /> Use camera
+                    <Camera className="h-4 w-4" /> {t("documents.useCamera")}
                   </button>
                   <button
                     onClick={() => fileRef.current?.click()}
                     className="inline-flex items-center justify-center gap-2 rounded-2xl gradient-primary px-4 py-3 text-sm font-semibold text-primary-foreground shadow-glow"
                   >
-                    Choose file
+                    {t("documents.chooseFile")}
                   </button>
                 </div>
               </motion.div>
@@ -321,10 +314,10 @@ function UploadModal({ doc, onClose }: { doc: DocumentItem; onClose: () => void 
               >
                 <div className="mb-4 flex items-center gap-2">
                   <CheckCircle2 className="h-5 w-5 text-success" />
-                  <div className="text-sm font-semibold">Verified with AI</div>
+                  <div className="text-sm font-semibold">{t("common.verifiedByAi")}</div>
                   {doc.confidence && (
                     <span className="ml-auto rounded-full bg-success/15 px-2.5 py-1 text-xs font-semibold text-success">
-                      {doc.confidence}% confidence
+                      {doc.confidence}% {t("common.confidence").toLowerCase()}
                     </span>
                   )}
                 </div>
@@ -344,7 +337,7 @@ function UploadModal({ doc, onClose }: { doc: DocumentItem; onClose: () => void 
                   </dl>
                 ) : (
                   <p className="text-sm text-muted-foreground">
-                    Upload a file to see extracted details here.
+                    {t("documents.empty")}
                   </p>
                 )}
                 {doc.status === "issue" && (
@@ -353,11 +346,10 @@ function UploadModal({ doc, onClose }: { doc: DocumentItem; onClose: () => void 
                       <AlertTriangle className="mt-0.5 h-4 w-4 text-warning-foreground" />
                       <div>
                         <div className="text-sm font-semibold">
-                          Suggested improvement
+                          {t("documents.suggestedImprovement")}
                         </div>
                         <p className="mt-1 text-xs text-muted-foreground">
-                          {doc.issue} Uploading a more recent version raises confidence
-                          by up to 5%.
+                          {doc.issue} {t("documents.improveHelp")}
                         </p>
                       </div>
                     </div>
@@ -365,7 +357,7 @@ function UploadModal({ doc, onClose }: { doc: DocumentItem; onClose: () => void 
                 )}
                 <div className="mt-5 grid grid-cols-2 gap-2">
                   <button className="rounded-2xl border border-border bg-background px-4 py-3 text-sm font-semibold hover:bg-accent">
-                    Preview
+                    {t("common.preview")}
                   </button>
                   <button
                     onClick={() => {
@@ -374,7 +366,7 @@ function UploadModal({ doc, onClose }: { doc: DocumentItem; onClose: () => void 
                     }}
                     className="rounded-2xl gradient-primary px-4 py-3 text-sm font-semibold text-primary-foreground shadow-glow"
                   >
-                    Replace
+                    {t("common.replace")}
                   </button>
                 </div>
               </motion.div>
@@ -387,15 +379,16 @@ function UploadModal({ doc, onClose }: { doc: DocumentItem; onClose: () => void 
 }
 
 function DocumentsPage() {
+  const { t } = useTranslation();
   const [open, setOpen] = useState<DocumentItem | null>(null);
   const verified = documents.filter((d) => d.status === "verified").length;
 
   return (
     <AppLayout>
       <SectionHeader
-        eyebrow="Documents"
-        title="Everything in one secure place"
-        subtitle={`${verified} of ${documents.length} verified · AI checks each document as you upload.`}
+        eyebrow={t("nav.documents")}
+        title={t("documents.title")}
+        subtitle={t("documents.subtitle", { verified, total: documents.length })}
       />
 
       <Stagger className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

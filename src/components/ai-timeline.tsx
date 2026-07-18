@@ -1,15 +1,19 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { Check, Sparkles } from "lucide-react";
-import { useEffect, useState } from "react";
-
-const steps = [
-  { label: "Reading Passport", result: "Passport detected" },
-  { label: "Reading Employment Letter", result: "Salary verified" },
-  { label: "Reading Visa", result: "Residency verified" },
-  { label: "Checking inconsistencies", result: "No issues found" },
-];
+import { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 
 export function AITimeline({ onComplete }: { onComplete?: () => void }) {
+  const { t } = useTranslation();
+  const steps = useMemo(
+    () => [
+      { label: t("ai.steps.readPassport"), result: t("ai.results.passportDetected") },
+      { label: t("ai.steps.readEmployment"), result: t("ai.results.salaryVerified") },
+      { label: t("ai.steps.readVisa"), result: t("ai.results.residencyVerified") },
+      { label: t("ai.steps.checkInconsistencies"), result: t("ai.results.noIssues") },
+    ],
+    [t],
+  );
   const [i, setI] = useState(0);
   const [done, setDone] = useState(false);
 
@@ -20,9 +24,9 @@ export function AITimeline({ onComplete }: { onComplete?: () => void }) {
       onComplete?.();
       return;
     }
-    const t = setTimeout(() => setI((v) => v + 1), 900);
-    return () => clearTimeout(t);
-  }, [i, done, onComplete]);
+    const to = setTimeout(() => setI((v) => v + 1), 900);
+    return () => clearTimeout(to);
+  }, [i, done, onComplete, steps.length]);
 
   return (
     <div className="rounded-3xl border border-border/60 bg-card p-5 md:p-6">
@@ -36,9 +40,9 @@ export function AITimeline({ onComplete }: { onComplete?: () => void }) {
             <Sparkles className="h-4 w-4" />
           </motion.div>
           <div>
-            <div className="text-sm font-semibold">RentReady AI</div>
+            <div className="text-sm font-semibold">{t("app.name")}</div>
             <div className="text-xs text-muted-foreground">
-              {done ? "Review complete" : "Reviewing your documents…"}
+              {done ? t("ai.reviewComplete") : t("ai.reviewing")}
             </div>
           </div>
         </div>
@@ -48,10 +52,11 @@ export function AITimeline({ onComplete }: { onComplete?: () => void }) {
             animate={{ opacity: 1, scale: 1 }}
             className="rounded-full bg-success/15 px-3 py-1 text-xs font-semibold text-success"
           >
-            +6% confidence
+            {t("ai.confidenceBump")}
           </motion.div>
         )}
       </div>
+
 
       <ol className="space-y-2.5">
         {steps.map((s, idx) => {

@@ -9,9 +9,11 @@ import {
   User as UserIcon,
 } from "lucide-react";
 import { toast } from "sonner";
+import { useTranslation } from "react-i18next";
 import { AppLayout } from "@/components/app-layout";
 import { SectionHeader } from "@/components/ui-bits";
 import { useAuth } from "@/lib/auth-context";
+import { setAppLanguage, SUPPORTED_LANGS, type Lang } from "@/lib/i18n";
 
 export const Route = createFileRoute("/settings")({
   head: () => ({
@@ -21,141 +23,129 @@ export const Route = createFileRoute("/settings")({
 });
 
 function SettingsPage() {
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
-  const { profile, displayName, isDemo, signOut } = useAuth();
+  const { profile, displayName, isDemo, signOut, updateProfile } = useAuth();
 
   const handleSignOut = async () => {
     await signOut();
-    toast.success("Signed out");
+    toast.success(t("auth.toasts.signedOut"));
     navigate({ to: "/auth", replace: true });
   };
 
-  const notImplemented = () => toast("Coming soon", { description: "This setting will be available shortly." });
+  const notImplemented = () =>
+    toast(t("settings.comingSoon"), { description: t("settings.comingSoonDetail") });
 
-  const sections = [
-    {
-      icon: UserIcon,
-      title: "Account",
-      body: (
-        <div className="space-y-3">
-          <Row label="Name" value={displayName} />
-          <Row label="Email" value={profile?.email ?? (isDemo ? "Demo mode" : "—")} />
-          <Row label="Country" value={profile?.country ?? "—"} />
-          <button
-            onClick={() => navigate({ to: "/profile" })}
-            className="mt-2 rounded-lg border border-border px-3 py-1.5 text-xs font-semibold hover:bg-accent/50"
-          >
-            Edit profile
-          </button>
-        </div>
-      ),
-    },
-    {
-      icon: Bell,
-      title: "Notifications",
-      body: (
-        <Toggle
-          label="Email me when documents are verified"
-          defaultChecked
-          onChange={notImplemented}
-        />
-      ),
-    },
-    {
-      icon: Moon,
-      title: "Theme",
-      body: (
-        <Toggle
-          label="Use dark mode"
-          onChange={(v) => {
-            if (typeof document !== "undefined") {
-              document.documentElement.classList.toggle("dark", v);
-            }
-            toast.success(`Switched to ${v ? "dark" : "light"} mode`);
-          }}
-        />
-      ),
-    },
-    {
-      icon: Lock,
-      title: "Privacy",
-      body: (
-        <Toggle
-          label="Share anonymized data to improve AI"
-          onChange={notImplemented}
-        />
-      ),
-    },
-    {
-      icon: Globe,
-      title: "Language",
-      body: (
-        <select
-          className="rounded-xl border border-border bg-card px-3 py-2 text-sm"
-          onChange={notImplemented}
-          defaultValue="en"
-        >
-          <option value="en">English</option>
-          <option value="de">Deutsch</option>
-          <option value="fr">Français</option>
-          <option value="es">Español</option>
-        </select>
-      ),
-    },
-  ];
+  const current = (i18n.language?.split("-")[0] ?? "en") as Lang;
+
+  const onLangChange = async (l: Lang) => {
+    await setAppLanguage(l);
+    if (!isDemo) await updateProfile({ preferred_language: l });
+    toast.success(t("settings.languageUpdated"));
+  };
 
   return (
     <AppLayout>
       <SectionHeader
-        eyebrow="Settings"
-        title="Manage your account"
-        subtitle="Fine-tune your RentReady AI experience."
+        eyebrow={t("nav.settings")}
+        title={t("settings.title")}
+        subtitle={t("settings.subtitle")}
       />
 
       <div className="space-y-4 pb-8">
-        {sections.map((s) => (
-          <div
-            key={s.title}
-            className="rounded-3xl border border-border/60 bg-card p-5 md:p-6"
-          >
-            <div className="mb-4 flex items-center gap-3">
-              <div className="grid h-9 w-9 place-items-center rounded-xl bg-primary/10 text-primary">
-                <s.icon className="h-4 w-4" />
-              </div>
-              <div className="text-sm font-semibold">{s.title}</div>
-            </div>
-            {s.body}
+        {/* Account */}
+        <Section icon={UserIcon} title={t("settings.account")}>
+          <div className="space-y-3">
+            <Row label={t("common.name")} value={displayName} />
+            <Row label={t("common.email")} value={profile?.email ?? (isDemo ? t("auth.continueAsDemo") : "—")} />
+            <Row label={t("common.country")} value={profile?.country ?? "—"} />
+            <button
+              onClick={() => navigate({ to: "/profile" })}
+              className="mt-2 rounded-lg border border-border px-3 py-1.5 text-xs font-semibold hover:bg-accent/50"
+            >
+              {t("settings.editProfile")}
+            </button>
           </div>
-        ))}
+        </Section>
+
+        {/* Language & Region */}
+        <Section icon={Globe} title={t("language.sectionTitle")}>
+          <div className="space-y-2">
+            <label className="text-xs font-medium text-muted-foreground">
+              {t("language.preferred")}
+            </label>
+            <select
+              value={current}
+              onChange={(e) => void onLangChange(e.target.value as Lang)}
+              className="w-full rounded-xl border border-border bg-card px-3 py-2 text-sm"
+            >
+              {SUPPORTED_LANGS.map((l) => (
+                <option key={l} value={l}>
+                  {l === "en" ? "🇬🇧 English" : l === "de" ? "🇩🇪 Deutsch" : "🇮🇳 हिन्दी"}
+                </option>
+              ))}
+            </select>
+          </div>
+        </Section>
+
+        <Section icon={Bell} title={t("settings.notifications")}>
+          <Toggle label={t("settings.notifEmail")} defaultChecked onChange={notImplemented} />
+        </Section>
+
+        <Section icon={Moon} title={t("settings.theme")}>
+          <Toggle
+            label={t("settings.darkMode")}
+            onChange={(v) => {
+              if (typeof document !== "undefined") {
+                document.documentElement.classList.toggle("dark", v);
+              }
+              toast.success(t("settings.themeSwitched", { mode: v ? t("settings.dark") : t("settings.light") }));
+            }}
+          />
+        </Section>
+
+        <Section icon={Lock} title={t("settings.privacy")}>
+          <Toggle label={t("settings.shareData")} onChange={notImplemented} />
+        </Section>
 
         <div className="rounded-3xl border border-destructive/30 bg-card p-5 md:p-6">
           <div className="mb-4 flex items-center gap-3">
             <div className="grid h-9 w-9 place-items-center rounded-xl bg-destructive/10 text-destructive">
               <Trash2 className="h-4 w-4" />
             </div>
-            <div className="text-sm font-semibold">Danger zone</div>
+            <div className="text-sm font-semibold">{t("settings.dangerZone")}</div>
           </div>
           <div className="flex flex-wrap items-center gap-3">
             <button
               onClick={handleSignOut}
               className="flex items-center gap-2 rounded-xl border border-border px-3 py-2 text-sm font-semibold hover:bg-accent/50"
             >
-              <LogOut className="h-4 w-4" /> Sign out
+              <LogOut className="h-4 w-4" /> {t("common.signOut")}
             </button>
             <button
-              onClick={() =>
-                toast("Contact support to delete your account", {
-                  description: "We keep this manual to keep your data safe.",
-                })
-              }
+              onClick={() => toast(t("settings.deleteAccount"))}
               className="flex items-center gap-2 rounded-xl border border-destructive/40 px-3 py-2 text-sm font-semibold text-destructive hover:bg-destructive/10"
             >
-              <Trash2 className="h-4 w-4" /> Delete account
+              <Trash2 className="h-4 w-4" /> {t("settings.deleteAccount")}
             </button>
           </div>
         </div>
       </div>
     </AppLayout>
+  );
+}
+
+function Section({ icon: Icon, title, children }: { icon: any; title: string; children: React.ReactNode }) {
+  return (
+    <div className="rounded-3xl border border-border/60 bg-card p-5 md:p-6">
+      <div className="mb-4 flex items-center gap-3">
+        <div className="grid h-9 w-9 place-items-center rounded-xl bg-primary/10 text-primary">
+          <Icon className="h-4 w-4" />
+        </div>
+        <div className="text-sm font-semibold">{title}</div>
+      </div>
+      {children}
+    </div>
   );
 }
 
@@ -168,15 +158,7 @@ function Row({ label, value }: { label: string; value: string }) {
   );
 }
 
-function Toggle({
-  label,
-  defaultChecked,
-  onChange,
-}: {
-  label: string;
-  defaultChecked?: boolean;
-  onChange?: (v: boolean) => void;
-}) {
+function Toggle({ label, defaultChecked, onChange }: { label: string; defaultChecked?: boolean; onChange?: (v: boolean) => void }) {
   return (
     <label className="flex cursor-pointer items-center justify-between rounded-xl border border-border/60 bg-background/60 px-3.5 py-3">
       <span className="text-sm">{label}</span>

@@ -3,8 +3,10 @@ import { AnimatePresence, motion } from "framer-motion";
 import { ArrowLeft, ArrowRight, Check, Loader2, Sparkles } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
+import { useTranslation } from "react-i18next";
 import { useAuth } from "@/lib/auth-context";
 import { AuthGate } from "@/components/auth-gate";
+import { setAppLanguage, SUPPORTED_LANGS, type Lang } from "@/lib/i18n";
 
 export const Route = createFileRoute("/onboarding")({
   head: () => ({ meta: [{ title: "Onboarding — RentReady AI" }] }),
@@ -15,52 +17,88 @@ export const Route = createFileRoute("/onboarding")({
   ),
 });
 
-const COUNTRIES = ["Germany", "USA", "United Kingdom", "Canada", "Other"];
-const EMPLOYMENT = ["Student", "Employee", "Self-employed", "Freelancer", "Other"];
-const DOCS = [
-  "Passport",
-  "Visa",
-  "Employment Letter",
-  "Payslip",
-  "Bank Statement",
-  "Utility Bill",
-  "Rental Reference",
-];
+const COUNTRIES = ["Germany", "USA", "United Kingdom", "India", "Canada", "Other"];
 
 function OnboardingPage() {
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const { updateProfile } = useAuth();
   const [step, setStep] = useState(0);
+  const [lang, setLang] = useState<Lang>((i18n.language?.split("-")[0] as Lang) || "en");
   const [rentalCountry, setRentalCountry] = useState<string | null>(null);
   const [employment, setEmployment] = useState<string | null>(null);
   const [docs, setDocs] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
 
+  const EMPLOYMENT_OPTS = [
+    { id: "student", label: t("onboarding.employmentOptions.student") },
+    { id: "employee", label: t("onboarding.employmentOptions.employee") },
+    { id: "selfEmployed", label: t("onboarding.employmentOptions.selfEmployed") },
+    { id: "freelancer", label: t("onboarding.employmentOptions.freelancer") },
+    { id: "other", label: t("onboarding.employmentOptions.other") },
+  ];
+  const DOC_OPTS = [
+    { id: "passport", label: t("onboarding.docsOptions.passport") },
+    { id: "visa", label: t("onboarding.docsOptions.visa") },
+    { id: "employment", label: t("onboarding.docsOptions.employment") },
+    { id: "payslip", label: t("onboarding.docsOptions.payslip") },
+    { id: "bank", label: t("onboarding.docsOptions.bank") },
+    { id: "utility", label: t("onboarding.docsOptions.utility") },
+    { id: "reference", label: t("onboarding.docsOptions.reference") },
+  ];
+
   const steps = [
     {
-      title: "Where are you renting?",
-      subtitle: "We tailor recommendations to your rental market.",
+      title: t("onboarding.language.title"),
+      subtitle: t("onboarding.language.subtitle"),
       render: (
-        <OptionGrid
-          options={COUNTRIES}
-          value={rentalCountry}
-          onChange={setRentalCountry}
-        />
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+          {SUPPORTED_LANGS.map((l) => {
+            const active = lang === l;
+            const label = l === "en" ? "🇬🇧 English" : l === "de" ? "🇩🇪 Deutsch" : "🇮🇳 हिन्दी";
+            return (
+              <button
+                key={l}
+                onClick={() => {
+                  setLang(l);
+                  void setAppLanguage(l);
+                }}
+                className={
+                  "flex items-center justify-between rounded-2xl border px-4 py-3.5 text-left text-sm font-medium transition " +
+                  (active
+                    ? "border-primary bg-primary/[0.06] text-foreground shadow-glow"
+                    : "border-border bg-card hover:border-primary/40 hover:bg-accent/40")
+                }
+              >
+                {label}
+                {active && (
+                  <span className="grid h-5 w-5 place-items-center rounded-full gradient-primary text-primary-foreground">
+                    <Check className="h-3 w-3" />
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </div>
       ),
+      canContinue: true,
+    },
+    {
+      title: t("onboarding.location.title"),
+      subtitle: t("onboarding.location.subtitle"),
+      render: <OptionGrid options={COUNTRIES.map((c) => ({ id: c, label: c }))} value={rentalCountry} onChange={setRentalCountry} />,
       canContinue: !!rentalCountry,
     },
     {
-      title: "What's your employment status?",
-      subtitle: "Landlords review this closely.",
-      render: (
-        <OptionGrid options={EMPLOYMENT} value={employment} onChange={setEmployment} />
-      ),
+      title: t("onboarding.employment.title"),
+      subtitle: t("onboarding.employment.subtitle"),
+      render: <OptionGrid options={EMPLOYMENT_OPTS} value={employment} onChange={setEmployment} />,
       canContinue: !!employment,
     },
     {
-      title: "Which documents do you already have?",
-      subtitle: "Select all that apply — you can add the rest later.",
-      render: <MultiGrid options={DOCS} values={docs} onChange={setDocs} />,
+      title: t("onboarding.docs.title"),
+      subtitle: t("onboarding.docs.subtitle"),
+      render: <MultiGrid options={DOC_OPTS} values={docs} onChange={setDocs} />,
       canContinue: true,
     },
   ];
@@ -75,11 +113,12 @@ function OnboardingPage() {
     const { error } = await updateProfile({
       rental_country: rentalCountry,
       employment_status: employment,
+      preferred_language: lang,
       onboarding_completed: true,
     });
     setBusy(false);
     if (error) return toast.error(error);
-    toast.success("You're all set");
+    toast.success(t("onboarding.allSet"));
     navigate({ to: "/", replace: true });
   };
 
@@ -96,14 +135,13 @@ function OnboardingPage() {
             <div className="grid h-8 w-8 place-items-center rounded-lg gradient-primary text-primary-foreground">
               <Sparkles className="h-4 w-4" />
             </div>
-            <div className="text-sm font-semibold tracking-tight">RentReady AI</div>
+            <div className="text-sm font-semibold tracking-tight">{t("app.name")}</div>
           </div>
           <div className="text-xs font-medium text-muted-foreground">
-            Step {step + 1} of {steps.length}
+            {t("onboarding.step", { current: step + 1, total: steps.length })}
           </div>
         </div>
 
-        {/* Progress */}
         <div className="mt-6 flex gap-1.5">
           {steps.map((_, i) => (
             <div key={i} className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted">
@@ -140,7 +178,7 @@ function OnboardingPage() {
             onClick={() => (step === 0 ? navigate({ to: "/welcome" }) : setStep((s) => s - 1))}
             className="flex items-center gap-1.5 rounded-xl px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground"
           >
-            <ArrowLeft className="h-4 w-4" /> Back
+            <ArrowLeft className="h-4 w-4" /> {t("common.back")}
           </button>
           <button
             onClick={onNext}
@@ -151,7 +189,7 @@ function OnboardingPage() {
               <Loader2 className="h-4 w-4 animate-spin" />
             ) : (
               <>
-                {isLast ? "Finish" : "Continue"} <ArrowRight className="h-4 w-4" />
+                {isLast ? t("common.finish") : t("common.continue")} <ArrowRight className="h-4 w-4" />
               </>
             )}
           </button>
@@ -161,23 +199,17 @@ function OnboardingPage() {
   );
 }
 
-function OptionGrid({
-  options,
-  value,
-  onChange,
-}: {
-  options: string[];
-  value: string | null;
-  onChange: (v: string) => void;
-}) {
+type Opt = { id: string; label: string };
+
+function OptionGrid({ options, value, onChange }: { options: Opt[]; value: string | null; onChange: (v: string) => void }) {
   return (
     <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
       {options.map((o) => {
-        const active = value === o;
+        const active = value === o.id;
         return (
           <button
-            key={o}
-            onClick={() => onChange(o)}
+            key={o.id}
+            onClick={() => onChange(o.id)}
             className={
               "flex items-center justify-between rounded-2xl border px-4 py-3.5 text-left text-sm font-medium transition " +
               (active
@@ -185,7 +217,7 @@ function OptionGrid({
                 : "border-border bg-card hover:border-primary/40 hover:bg-accent/40")
             }
           >
-            {o}
+            {o.label}
             {active && (
               <span className="grid h-5 w-5 place-items-center rounded-full gradient-primary text-primary-foreground">
                 <Check className="h-3 w-3" />
@@ -198,25 +230,17 @@ function OptionGrid({
   );
 }
 
-function MultiGrid({
-  options,
-  values,
-  onChange,
-}: {
-  options: string[];
-  values: string[];
-  onChange: (v: string[]) => void;
-}) {
+function MultiGrid({ options, values, onChange }: { options: Opt[]; values: string[]; onChange: (v: string[]) => void }) {
   const toggle = (o: string) =>
     onChange(values.includes(o) ? values.filter((v) => v !== o) : [...values, o]);
   return (
     <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
       {options.map((o) => {
-        const active = values.includes(o);
+        const active = values.includes(o.id);
         return (
           <button
-            key={o}
-            onClick={() => toggle(o)}
+            key={o.id}
+            onClick={() => toggle(o.id)}
             className={
               "flex items-center justify-between rounded-2xl border px-4 py-3.5 text-left text-sm font-medium transition " +
               (active
@@ -224,13 +248,11 @@ function MultiGrid({
                 : "border-border bg-card hover:border-primary/40 hover:bg-accent/40")
             }
           >
-            {o}
+            {o.label}
             <span
               className={
                 "grid h-5 w-5 place-items-center rounded-md border " +
-                (active
-                  ? "border-primary bg-primary text-primary-foreground"
-                  : "border-border")
+                (active ? "border-primary bg-primary text-primary-foreground" : "border-border")
               }
             >
               {active && <Check className="h-3 w-3" />}

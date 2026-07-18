@@ -3,7 +3,9 @@ import { motion } from "framer-motion";
 import { ArrowRight, Loader2, Sparkles } from "lucide-react";
 import { useState, type FormEvent } from "react";
 import { toast } from "sonner";
+import { useTranslation } from "react-i18next";
 import { useAuth } from "@/lib/auth-context";
+import { LanguageSwitcher } from "@/components/language-switcher";
 
 export const Route = createFileRoute("/auth/signup")({
   head: () => ({
@@ -15,9 +17,10 @@ export const Route = createFileRoute("/auth/signup")({
   component: SignupPage,
 });
 
-const COUNTRIES = ["United Kingdom", "Germany", "United States", "Canada", "Other"];
+const COUNTRIES = ["United Kingdom", "Germany", "United States", "Canada", "India", "Other"];
 
 function SignupPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { signUp } = useAuth();
   const [name, setName] = useState("");
@@ -28,12 +31,12 @@ function SignupPage() {
 
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    if (password.length < 6) return toast.error("Password must be at least 6 characters");
+    if (password.length < 6) return toast.error(t("auth.errors.passwordShort"));
     setBusy(true);
     const { error } = await signUp(name, email, password, country);
     setBusy(false);
     if (error) return toast.error(error);
-    toast.success("Account created — let's get started");
+    toast.success(t("auth.toasts.created"));
     navigate({ to: "/welcome", replace: true });
   };
 
@@ -44,6 +47,9 @@ function SignupPage() {
         className="pointer-events-none fixed inset-0 -z-10"
         style={{ background: "var(--gradient-glow)" }}
       />
+      <div className="absolute right-4 top-4 z-10">
+        <LanguageSwitcher />
+      </div>
       <div className="mx-auto flex min-h-dvh w-full max-w-md items-center justify-center p-6">
         <motion.div
           initial={{ opacity: 0, y: 12 }}
@@ -55,55 +61,25 @@ function SignupPage() {
             <div className="grid h-9 w-9 place-items-center rounded-xl gradient-primary text-primary-foreground shadow-glow">
               <Sparkles className="h-4 w-4" />
             </div>
-            <div className="text-sm font-semibold tracking-tight">RentReady AI</div>
+            <div className="text-sm font-semibold tracking-tight">{t("app.name")}</div>
           </div>
-          <h1 className="text-2xl font-semibold tracking-tight">Create your account</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Only a few details. You can edit everything later.
-          </p>
+          <h1 className="text-2xl font-semibold tracking-tight">{t("auth.createAccount")}</h1>
+          <p className="mt-1 text-sm text-muted-foreground">{t("auth.createSubtitle")}</p>
 
           <form onSubmit={onSubmit} className="mt-6 space-y-3">
-            <Field label="Name">
-              <input
-                required
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                className={inputCls}
-                placeholder="Alex Doe"
-              />
+            <Field label={t("common.name")}>
+              <input required value={name} onChange={(e) => setName(e.target.value)} className={inputCls} placeholder="Alex Doe" />
             </Field>
-            <Field label="Email">
-              <input
-                type="email"
-                required
-                autoComplete="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className={inputCls}
-                placeholder="you@example.com"
-              />
+            <Field label={t("common.email")}>
+              <input type="email" required autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} className={inputCls} placeholder="you@example.com" />
             </Field>
-            <Field label="Password">
-              <input
-                type="password"
-                required
-                autoComplete="new-password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className={inputCls}
-                placeholder="At least 6 characters"
-              />
+            <Field label={t("common.password")}>
+              <input type="password" required autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)} className={inputCls} placeholder="••••••••" />
             </Field>
-            <Field label="Country">
-              <select
-                value={country}
-                onChange={(e) => setCountry(e.target.value)}
-                className={inputCls}
-              >
+            <Field label={t("common.country")}>
+              <select value={country} onChange={(e) => setCountry(e.target.value)} className={inputCls}>
                 {COUNTRIES.map((c) => (
-                  <option key={c} value={c}>
-                    {c}
-                  </option>
+                  <option key={c} value={c}>{c}</option>
                 ))}
               </select>
             </Field>
@@ -113,20 +89,14 @@ function SignupPage() {
               disabled={busy}
               className="btn-primary-premium mt-2 flex w-full items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold disabled:opacity-70"
             >
-              {busy ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <>
-                  Create account <ArrowRight className="h-4 w-4" />
-                </>
-              )}
+              {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : (<>{t("auth.createAccount")} <ArrowRight className="h-4 w-4" /></>)}
             </button>
           </form>
 
           <p className="mt-6 text-center text-xs text-muted-foreground">
-            Already have an account?{" "}
+            {t("auth.alreadyHaveAccount")}{" "}
             <Link to="/auth" className="font-semibold text-primary hover:underline">
-              Sign in
+              {t("common.signIn")}
             </Link>
           </p>
         </motion.div>

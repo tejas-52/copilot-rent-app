@@ -2,6 +2,8 @@ import { createFileRoute } from "@tanstack/react-router";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowUp, Bot, Sparkles, User } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { useChat } from "@ai-sdk/react";
+import { DefaultChatTransport, type UIMessage } from "ai";
 import { AppLayout } from "@/components/app-layout";
 import { SectionHeader } from "@/components/ui-bits";
 
@@ -18,8 +20,6 @@ export const Route = createFileRoute("/assistant")({
   component: AssistantPage,
 });
 
-type Msg = { role: "user" | "ai"; text: string };
-
 const suggestions = [
   "Why isn't my application ready?",
   "Explain my rental confidence score.",
@@ -27,48 +27,39 @@ const suggestions = [
   "How can I improve my score?",
 ];
 
-const canned: Record<string, string> = {
-  "Why isn't my application ready?":
-    "You're at 94% confidence. Two things stand between you and 'Excellent': a recent bank statement (last 60 days) and a rental reference from your previous landlord. Add both and you'll be application-ready.",
-  "Explain my rental confidence score.":
-    "Rental Confidence blends four signals — identity, income, employment, and residence. Yours is strong on identity and employment (both 98%+). Residence is still pending, which is why we're at 94% instead of 100%.",
-  "What documents am I missing?":
-    "You're missing a recent bank statement, a valid tax document, and a rental reference. Your payslip is uploaded but older than 60 days — I'd replace it with the September one.",
-  "How can I improve my score?":
-    "Upload your latest bank statement (+5%), replace the outdated payslip (+4%), and add a rental reference letter (+3%). That takes you to 98% — the tier landlords trust most.",
-};
-
-function reply(q: string): string {
-  return (
-    canned[q] ??
-    "Great question. I've reviewed your uploaded documents and profile — here's what stands out: your identity and employment are fully verified, and your income is well above the typical requirement. Focus next on residence proof to unlock the highest tier."
-  );
-}
+const initialMessages: UIMessage[] = [
+  {
+    id: "welcome",
+    role: "assistant",
+    parts: [
+      {
+        type: "text",
+        text: "Hi — I'm your RentReady copilot. Ask me anything about your application, or tap a suggestion below.",
+      },
+    ],
+  },
+];
 
 function AssistantPage() {
-  const [messages, setMessages] = useState<Msg[]>([
-    {
-      role: "ai",
-      text: "Hi John — I'm your RentReady copilot. Ask me anything about your application, or tap a suggestion below.",
-    },
-  ]);
+  const transport = useRef(new DefaultChatTransport({ api: "/api/chat" })).current;
+  const { messages, sendMessage, status } = useChat({
+    id: "assistant",
+    messages: initialMessages,
+    transport,
+  });
   const [input, setInput] = useState("");
-  const [thinking, setThinking] = useState(false);
   const endRef = useRef<HTMLDivElement>(null);
+  const thinking = status === "submitted" || status === "streaming";
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, thinking]);
 
   function send(text: string) {
-    if (!text.trim()) return;
-    setMessages((m) => [...m, { role: "user", text }]);
+    const t = text.trim();
+    if (!t || thinking) return;
     setInput("");
-    setThinking(true);
-    setTimeout(() => {
-      setMessages((m) => [...m, { role: "ai", text: reply(text) }]);
-      setThinking(false);
-    }, 900);
+    void sendMessage({ text: t });
   }
 
   return (
@@ -83,41 +74,43 @@ function AssistantPage() {
         <div className="flex h-[62dvh] min-h-[520px] flex-col overflow-hidden rounded-3xl border border-border/60 bg-card md:h-[68dvh]">
           <div className="flex-1 space-y-4 overflow-y-auto p-5">
             <AnimatePresence initial={false}>
-              {messages.map((m, i) => (
-                <motion.div
-                  key={i}
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className={`flex items-end gap-2 ${m.role === "user" ? "justify-end" : ""}`}
-                >
-                  {m.role === "ai" && (
-                    <div className="grid h-8 w-8 shrink-0 place-items-center rounded-full gradient-primary text-primary-foreground">
-                      <Sparkles className="h-4 w-4" />
-                    </div>
-                  )}
-                  <div
-                    className={
-                      "max-w-[78%] rounded-3xl px-4 py-2.5 text-sm leading-relaxed " +
-                      (m.role === "user"
-                        ? "gradient-primary text-primary-foreground shadow-glow"
-                        : "bg-background text-foreground")
-                    }
+              {messages.map((m) => {
+                const text = m.parts
+                  .map((p) => (p.type === "text" ? p.text : ""))
+                  .join("");
+                if (!text) return null;
+                return (
+                  <motion.div
+                    key={m.id}
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className={`flex items-end gap-2 ${m.role === "user" ? "justify-end" : ""}`}
                   >
-                    {m.text}
-                  </div>
-                  {m.role === "user" && (
-                    <div className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-accent text-accent-foreground">
-                      <User className="h-4 w-4" />
+                    {m.role !== "user" && (
+                      <div className="grid h-8 w-8 shrink-0 place-items-center rounded-full gradient-primary text-primary-foreground">
+                        <Sparkles className="h-4 w-4" />
+                      </div>
+                    )}
+                    <div
+                      className={
+                        "max-w-[78%] whitespace-pre-wrap rounded-3xl px-4 py-2.5 text-sm leading-relaxed " +
+                        (m.role === "user"
+                          ? "gradient-primary text-primary-foreground shadow-glow"
+                          : "bg-background text-foreground")
+                      }
+                    >
+                      {text}
                     </div>
-                  )}
-                </motion.div>
-              ))}
+                    {m.role === "user" && (
+                      <div className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-accent text-accent-foreground">
+                        <User className="h-4 w-4" />
+                      </div>
+                    )}
+                  </motion.div>
+                );
+              })}
               {thinking && (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="flex items-end gap-2"
-                >
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-end gap-2">
                   <div className="grid h-8 w-8 place-items-center rounded-full gradient-primary text-primary-foreground">
                     <Sparkles className="h-4 w-4" />
                   </div>
@@ -160,7 +153,7 @@ function AssistantPage() {
               />
               <button
                 type="submit"
-                disabled={!input.trim()}
+                disabled={!input.trim() || thinking}
                 className="grid h-10 w-10 shrink-0 place-items-center rounded-xl gradient-primary text-primary-foreground shadow-glow disabled:opacity-40"
                 aria-label="Send"
               >

@@ -17,7 +17,7 @@ import { useAuth } from "@/lib/auth-context";
 import { AITimeline } from "@/components/ai-timeline";
 import { ConfidenceRing } from "@/components/confidence-ring";
 import { FadeIn, SectionHeader, Stagger, StaggerItem } from "@/components/ui-bits";
-import { useAppState, useEmptyAppState } from "@/lib/app-queries";
+import { useAppState } from "@/lib/app-queries";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -42,7 +42,7 @@ function Dashboard() {
   const { t } = useTranslation();
   const { firstName } = useAuth();
   const { data } = useAppState();
-  const empty = useEmptyAppState();
+  const empty = emptyAppState;
   const state = data ?? empty;
 
   const {

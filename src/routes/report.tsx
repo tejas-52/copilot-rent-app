@@ -15,7 +15,7 @@ import { AppLayout } from "@/components/app-layout";
 import { ConfidenceRing } from "@/components/confidence-ring";
 import { ConfidenceRadar } from "@/components/confidence-radar";
 import { SectionHeader, Stagger, StaggerItem } from "@/components/ui-bits";
-import { useAppState, useEmptyAppState } from "@/lib/app-queries";
+import { useAppState } from "@/lib/app-queries";
 import { useAuth } from "@/lib/auth-context";
 
 export const Route = createFileRoute("/report")({
@@ -35,7 +35,7 @@ function ReportPage() {
   const { t } = useTranslation();
   const { displayName } = useAuth();
   const { data } = useAppState();
-  const state = data ?? useEmptyAppState();
+  const state = data ?? emptyAppState;
   const {
     confidence,
     documents,

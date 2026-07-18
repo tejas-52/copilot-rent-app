@@ -9,6 +9,12 @@ import {
 import { z } from "zod";
 import { createLovableAiGatewayProvider, CHAT_MODEL } from "@/lib/ai-gateway.server";
 import { verifyBearer } from "@/lib/copilot-auth.server";
+import {
+  retrieveRelevantSnippets,
+  routeQuery,
+  tavilySearch,
+  type RouteDecision,
+} from "@/lib/assistant-orchestrator.server";
 
 const LANG_NAMES: Record<string, string> = {
   en: "English",
@@ -79,17 +85,37 @@ async function loadProfile(supabase: any, userId: string) {
   return data;
 }
 
-function buildSystemPrompt(lang: string, profile: any, ctx: any, voiceMode: boolean) {
+function buildSystemPrompt(
+  lang: string,
+  profile: any,
+  ctx: any,
+  voiceMode: boolean,
+  retrieved: { source: string; text: string }[],
+  decision: RouteDecision,
+  webContext: string | null,
+) {
   const langName = LANG_NAMES[lang] ?? "English";
-  const summary = {
+  const baseSummary = {
     profile,
     application: ctx.app,
-    documents: ctx.docs,
-    extracted_fields: ctx.extractions.map((e: any) => e.data),
-    validation_issues: ctx.validation?.issues ?? [],
-    validation_checks: ctx.validation?.checks ?? [],
-    recommendations: ctx.recommendations?.items ?? [],
+    documents_overview: (ctx.docs ?? []).map((d: any) => ({
+      file_name: d.file_name,
+      doc_type: d.doc_type,
+      status: d.status,
+    })),
   };
+  const retrievedBlock = retrieved.length
+    ? retrieved.map((r) => `[${r.source}] ${r.text}`).join("\n")
+    : "(no directly relevant snippets retrieved)";
+  const webBlock = webContext ? `\n\nEXTERNAL WEB CONTEXT (already fetched for you):\n${webContext}` : "";
+  const routingNote =
+    decision.mode === "rag"
+      ? "Routing: answer from the user's data below. Do NOT call web_search."
+      : decision.mode === "web"
+        ? "Routing: external info is required. Web context has been pre-fetched below; use it. Only call web_search again if it is insufficient."
+        : decision.mode === "both"
+          ? "Routing: combine the user's data with the pre-fetched web context. Prioritize the user's data first, then augment with web facts."
+          : "Routing: no specific action required.";
   const voiceRule = voiceMode
     ? `\n\nVOICE MODE — CRITICAL: The user is talking to you hands-free. Reply with ONLY the single most important point. Maximum 2 short spoken sentences (~35 words). No lists, no markdown, no headings, no code, no URLs — plain conversational speech only. If more detail is needed, end with a short question like "Want the details?" instead of giving them.`
     : "";
@@ -97,37 +123,20 @@ function buildSystemPrompt(lang: string, profile: any, ctx: any, voiceMode: bool
 
 CRITICAL LANGUAGE RULE: Every word of your reply MUST be in ${langName}, regardless of the language the user writes in.
 
-Grounding: You are grounded in the user's own rental application data below. When the user asks about their score, missing documents, whether they can apply, or their report, answer directly from this data — do NOT search the web for that.
+${routingNote}
 
-Use the \`web_search\` tool ONLY when the user asks about information that is not in their data — such as rental laws, tenancy regulations, visa/immigration rules, city-specific requirements, or employer verification standards. Never call \`web_search\` for questions answerable from the user's application data.
+Grounding rules:
+1. ALWAYS prefer the user's uploaded documents and profile over external information.
+2. Only rely on external/web facts when the answer is not in the user's data.
+3. Never fabricate document fields — if data is missing, say so and suggest uploading it.
 
-Be concise, encouraging, specific. Reference the user's real documents and numbers when relevant. If they ask "can I apply now?", weigh their confidence score, missing required docs, and validation issues to give a clear yes/no with reasoning.${voiceRule}
+Be concise, encouraging, specific. Reference the user's real documents and numbers when relevant.${voiceRule}
 
-USER APPLICATION CONTEXT:
-${JSON.stringify(summary, null, 2)}`;
-}
+USER APPLICATION SUMMARY:
+${JSON.stringify(baseSummary, null, 2)}
 
-async function tavilySearch(query: string): Promise<string> {
-  const key = process.env.TAVILY_API_KEY;
-  if (!key) return "Web search is not configured.";
-  const res = await fetch("https://api.tavily.com/search", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      api_key: key,
-      query,
-      search_depth: "basic",
-      max_results: 5,
-      include_answer: true,
-    }),
-  });
-  if (!res.ok) return `Search failed: ${res.status}`;
-  const j = (await res.json()) as any;
-  const results = (j.results ?? [])
-    .slice(0, 5)
-    .map((r: any) => `- ${r.title}\n  ${r.url}\n  ${r.content?.slice(0, 400) ?? ""}`)
-    .join("\n\n");
-  return `Answer: ${j.answer ?? "(none)"}\n\nSources:\n${results}`;
+RETRIEVED RELEVANT SNIPPETS (top matches for this query):
+${retrievedBlock}${webBlock}`;
 }
 
 export const Route = createFileRoute("/api/chat")({

@@ -23,6 +23,7 @@ function useNav() {
   return [
     { to: "/", label: t("nav.home"), icon: HomeIcon, exact: true },
     { to: "/documents", label: t("nav.documents"), icon: FolderOpen },
+    { to: "/agent", label: t("nav.agent", { defaultValue: "Autofill" }), icon: Wand2 },
     { to: "/assistant", label: t("nav.assistant"), icon: Bot },
     { to: "/report", label: t("nav.report"), icon: FileCheck2 },
     { to: "/profile", label: t("nav.profile"), icon: User },

@@ -101,6 +101,8 @@ export function AppLayout({ children }: { children?: ReactNode }) {
 
 function AppShell({ children }: { children?: ReactNode }) {
   const { initials } = useAuth();
+  const { t } = useTranslation();
+  const nav = useNav();
   return (
     <div className="relative min-h-dvh bg-background">
       {/* Ambient gradient */}
@@ -132,7 +134,7 @@ function AppShell({ children }: { children?: ReactNode }) {
           <div className="mt-auto space-y-3">
             <div className="rounded-2xl border border-border/60 bg-card p-4">
               <div className="text-xs font-medium text-muted-foreground">
-                Rental Confidence
+                {t("profile.rentalConfidence")}
               </div>
               <div className="mt-1 text-2xl font-semibold tracking-tight">94%</div>
               <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-muted">
@@ -186,12 +188,13 @@ function AppShell({ children }: { children?: ReactNode }) {
 }
 
 function UserMenu() {
+  const { t } = useTranslation();
   const { displayName, profile, initials, isDemo, signOut } = useAuth();
   const navigate = useNavigate();
-  const email = isDemo ? "Demo mode" : profile?.email ?? "";
+  const email = isDemo ? t("common.loading") : profile?.email ?? "";
   const handleSignOut = async () => {
     await signOut();
-    toast.success("Signed out");
+    toast.success(t("auth.toasts.signedOut"));
     navigate({ to: "/auth", replace: true });
   };
   return (
@@ -213,13 +216,13 @@ function UserMenu() {
           to="/settings"
           className="flex flex-1 items-center gap-2 rounded-lg px-2 py-1.5 text-xs font-medium text-muted-foreground hover:bg-accent/50 hover:text-foreground"
         >
-          <SettingsIcon className="h-3.5 w-3.5" /> Settings
+          <SettingsIcon className="h-3.5 w-3.5" /> {t("nav.settings")}
         </Link>
         <button
           onClick={handleSignOut}
           className="flex items-center gap-2 rounded-lg px-2 py-1.5 text-xs font-medium text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
         >
-          <LogOut className="h-3.5 w-3.5" /> Logout
+          <LogOut className="h-3.5 w-3.5" /> {t("common.logout")}
         </button>
       </div>
     </div>

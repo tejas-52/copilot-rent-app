@@ -161,13 +161,36 @@ export const Route = createFileRoute("/api/chat")({
 
         let system: string;
         let appId: string | null = null;
+        let allowWebTool = true;
         if (authed) {
           const [profile, ctx] = await Promise.all([
             loadProfile(authed.supabase, authed.userId),
             loadContext(authed.supabase, authed.userId),
           ]);
           appId = ctx.app?.id ?? null;
-          system = buildSystemPrompt(lang, profile, ctx, voiceMode);
+
+          // Extract the latest user query text for the orchestrator.
+          const last = body.messages[body.messages.length - 1];
+          const userQuery = (last?.parts ?? [])
+            .map((p: any) => (p.type === "text" ? p.text : ""))
+            .join("")
+            .trim();
+
+          // Orchestration: decide RAG vs web vs both, and retrieve relevant snippets.
+          const [decision, retrieved] = await Promise.all([
+            userQuery
+              ? routeQuery(key, userQuery, ctx)
+              : Promise.resolve<RouteDecision>({ mode: "rag", reason: "no-query" }),
+            Promise.resolve(userQuery ? retrieveRelevantSnippets(userQuery, ctx) : []),
+          ]);
+
+          let webContext: string | null = null;
+          if ((decision.mode === "web" || decision.mode === "both") && decision.search_query) {
+            webContext = await tavilySearch(decision.search_query);
+          }
+          allowWebTool = decision.mode !== "rag";
+
+          system = buildSystemPrompt(lang, profile, ctx, voiceMode, retrieved, decision, webContext);
         } else {
           const langName = LANG_NAMES[lang] ?? "English";
           const voiceRule = voiceMode ? " Reply in 1-2 short spoken sentences, plain conversational speech only." : "";

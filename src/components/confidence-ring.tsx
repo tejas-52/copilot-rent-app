@@ -38,6 +38,17 @@ export function ConfidenceRing({
 
   return (
     <div className="relative grid place-items-center" style={{ width: size, height: size }}>
+      <motion.div
+        aria-hidden
+        initial={{ opacity: 0, scale: 0.85 }}
+        animate={{ opacity: [0, 0.7, 0.4], scale: [0.85, 1.05, 1] }}
+        transition={{ duration: 1.8, ease: [0.2, 0.8, 0.2, 1] }}
+        className="absolute inset-4 rounded-full blur-2xl"
+        style={{
+          background:
+            "radial-gradient(closest-side, color-mix(in oklab, #3B82F6 55%, transparent), transparent 70%)",
+        }}
+      />
       <svg width={size} height={size} className="-rotate-90">
         <defs>
           <linearGradient id="ring-grad" x1="0" y1="0" x2="1" y2="1">

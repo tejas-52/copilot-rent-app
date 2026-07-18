@@ -15,13 +15,8 @@ import { AppLayout } from "@/components/app-layout";
 import { ConfidenceRing } from "@/components/confidence-ring";
 import { ConfidenceRadar } from "@/components/confidence-radar";
 import { SectionHeader, Stagger, StaggerItem } from "@/components/ui-bits";
-import {
-  confidence,
-  documents,
-  improvements,
-  profile,
-  timeline,
-} from "@/lib/app-data";
+import { useAppState, emptyAppState } from "@/lib/app-queries";
+import { useAuth } from "@/lib/auth-context";
 
 export const Route = createFileRoute("/report")({
   head: () => ({
@@ -38,9 +33,36 @@ export const Route = createFileRoute("/report")({
 
 function ReportPage() {
   const { t } = useTranslation();
+  const { displayName } = useAuth();
+  const { data } = useAppState();
+  const state = data ?? emptyAppState;
+  const {
+    confidence,
+    documents,
+    profileSummary,
+    timeline,
+    improvements,
+    radarAxes,
+    report,
+    validation,
+  } = state;
+
   const verified = documents.filter((d) => d.status === "verified");
   const missing = documents.filter((d) => d.status !== "verified");
   const [landlord, setLandlord] = useState(false);
+
+  const applicantName = profileSummary.fullName ?? displayName;
+  const employmentLine = [profileSummary.employer, profileSummary.occupation]
+    .filter(Boolean).join(" · ") || "—";
+  const incomeLine = profileSummary.monthlyIncome ?? "—";
+
+  const summarySentence =
+    (report?.content as any)?.summary ??
+    `${applicantName} — ${employmentLine} · ${incomeLine}.`;
+
+  // "Before" = score without recommendations applied (subtract sum of impacts, floored at 30)
+  const potentialGain = improvements.reduce((s, i) => s + i.impact, 0);
+  const before = Math.max(30, confidence - potentialGain);
 
   return (
     <AppLayout>
@@ -90,9 +112,7 @@ function ReportPage() {
               <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.14em] text-primary">
                 <Sparkles className="h-3.5 w-3.5" /> {t("report.aiSummary")}
               </div>
-              <p className="mt-2 text-muted-foreground">
-                {profile.name} — {profile.employment} · {profile.monthlyIncome}.
-              </p>
+              <p className="mt-2 text-muted-foreground">{summarySentence}</p>
             </div>
           </div>
         </StaggerItem>
@@ -102,9 +122,13 @@ function ReportPage() {
             <h3 className="text-lg font-semibold tracking-tight">{t("report.timeline")}</h3>
             <ol className="relative mt-5 space-y-4 pl-6">
               <span className="absolute left-[10px] top-2 bottom-2 w-px bg-border" />
-              {timeline.map((step, i) => (
+              {timeline.length === 0 ? (
+                <li className="text-sm text-muted-foreground">
+                  {t("report.emptyTimeline", { defaultValue: "Upload a document to begin the timeline." })}
+                </li>
+              ) : timeline.map((step, i) => (
                 <motion.li
-                  key={step.name}
+                  key={step.name + i}
                   initial={{ opacity: 0, x: -8 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.05 * i }}
@@ -134,7 +158,7 @@ function ReportPage() {
               <div className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.14em] text-primary">
                 <Sparkles className="h-3.5 w-3.5" /> {t("report.radar")}
               </div>
-              <ConfidenceRadar />
+              <ConfidenceRadar axes={radarAxes.map((a) => ({ ...a, label: a.label }))} />
             </div>
             <div className="rounded-3xl border border-border/60 bg-card p-6">
               <div className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.14em] text-primary">
@@ -142,7 +166,7 @@ function ReportPage() {
               </div>
               <div className="mt-4 space-y-5">
                 {[
-                  { label: t("report.before"), value: 74, tone: "muted" },
+                  { label: t("report.before"), value: before, tone: "muted" },
                   { label: t("report.after"), value: confidence, tone: "primary" },
                 ].map((row) => (
                   <div key={row.label}>
@@ -166,7 +190,7 @@ function ReportPage() {
                   </div>
                 ))}
                 <div className="rounded-2xl bg-success/10 p-3 text-sm text-success">
-                  <span className="font-semibold">+{confidence - 74}%</span> {t("report.uplift")}
+                  <span className="font-semibold">+{Math.max(0, confidence - before)}%</span> {t("report.uplift")}
                 </div>
               </div>
             </div>
@@ -178,14 +202,15 @@ function ReportPage() {
             <h3 className="text-lg font-semibold tracking-tight">{t("report.summary")}</h3>
             <dl className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-4">
               {[
-                [t("report.fields.applicant"), profile.name],
-                [t("report.fields.occupation"), profile.occupation],
-                [t("report.fields.monthlyIncome"), profile.monthlyIncome],
-                [t("report.fields.visa"), profile.visa],
-                [t("report.fields.address"), profile.address],
-                [t("report.fields.nationality"), profile.nationality],
-                [t("report.fields.employment"), profile.employment],
-                [t("report.fields.confidence"), `${confidence}% · ${t("dashboard.excellentTier")}`],
+                [t("report.fields.applicant"), applicantName],
+                [t("report.fields.occupation"), profileSummary.occupation ?? "—"],
+                [t("report.fields.monthlyIncome"), incomeLine],
+                [t("report.fields.visa"), profileSummary.visaStatus ?? "—"],
+                [t("report.fields.address"), profileSummary.address ?? "—"],
+                [t("report.fields.nationality"), profileSummary.nationality ?? "—"],
+                [t("report.fields.employment"), employmentLine],
+                [t("report.fields.confidence"),
+                  `${confidence}% · ${confidence >= 95 ? t("dashboard.excellentTier") : t("common.inProgress")}`],
               ].map(([k, v]) => (
                 <div key={k} className="rounded-2xl bg-background/60 p-3">
                   <dt className="text-[11px] uppercase tracking-wider text-muted-foreground">
@@ -195,6 +220,18 @@ function ReportPage() {
                 </div>
               ))}
             </dl>
+            {validation?.issues && validation.issues.length > 0 && (
+              <div className="mt-4 space-y-2">
+                {validation.issues.map((iss, i) => (
+                  <div key={i} className="rounded-2xl bg-warning/10 border border-warning/30 p-3 text-sm">
+                    <span className="mr-2 rounded-full bg-warning/20 px-2 py-0.5 text-[11px] font-semibold uppercase text-warning-foreground">
+                      {iss.severity}
+                    </span>
+                    {iss.message}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </StaggerItem>
 
@@ -202,17 +239,21 @@ function ReportPage() {
           <div className="h-full rounded-3xl border border-border/60 bg-card p-6">
             <h3 className="text-lg font-semibold tracking-tight">{t("report.verifiedDocs")}</h3>
             <ul className="mt-4 space-y-2">
-              {verified.map((d) => (
+              {verified.length === 0 ? (
+                <li className="rounded-2xl bg-background/60 p-3 text-sm text-muted-foreground">
+                  {t("report.noVerified", { defaultValue: "No verified documents yet." })}
+                </li>
+              ) : verified.map((d) => (
                 <li
                   key={d.id}
                   className="flex items-center gap-3 rounded-2xl bg-background/60 p-3"
                 >
                   <BadgeCheck className="h-5 w-5 text-success" />
                   <div className="min-w-0 flex-1 truncate text-sm font-medium">
-                    {d.name}
+                    {t(d.nameKey, { defaultValue: d.fallbackName })}
                   </div>
                   <span className="text-xs font-semibold text-muted-foreground">
-                    {d.confidence}%
+                    {d.confidence ?? 0}%
                   </span>
                 </li>
               ))}
@@ -224,6 +265,11 @@ function ReportPage() {
           <div className="h-full rounded-3xl border border-border/60 bg-card p-6">
             <h3 className="text-lg font-semibold tracking-tight">{t("report.recommendations")}</h3>
             <ul className="mt-4 space-y-2">
+              {missing.length === 0 && improvements.length === 0 && (
+                <li className="rounded-2xl bg-background/60 p-3 text-sm text-muted-foreground">
+                  {t("dashboard.allCaughtUp", { defaultValue: "You're all caught up." })}
+                </li>
+              )}
               {missing.map((d) => (
                 <li
                   key={d.id}
@@ -231,7 +277,7 @@ function ReportPage() {
                 >
                   <FileText className="h-5 w-5 text-primary" />
                   <div className="min-w-0 flex-1 truncate text-sm font-medium">
-                    {t("report.add", { name: d.name.toLowerCase() })}
+                    {t("report.add", { name: t(d.nameKey, { defaultValue: d.fallbackName }).toLowerCase() })}
                   </div>
                 </li>
               ))}

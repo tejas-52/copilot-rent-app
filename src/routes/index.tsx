@@ -17,13 +17,7 @@ import { useAuth } from "@/lib/auth-context";
 import { AITimeline } from "@/components/ai-timeline";
 import { ConfidenceRing } from "@/components/confidence-ring";
 import { FadeIn, SectionHeader, Stagger, StaggerItem } from "@/components/ui-bits";
-import {
-  confidence,
-  documents,
-  improvements,
-  insights,
-  journey,
-} from "@/lib/app-data";
+import { useAppState, emptyAppState } from "@/lib/app-queries";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -46,8 +40,21 @@ export const Route = createFileRoute("/")({
 
 function Dashboard() {
   const { t } = useTranslation();
-  const recent = documents.filter((d) => d.status === "verified").slice(0, 3);
   const { firstName } = useAuth();
+  const { data } = useAppState();
+  const empty = emptyAppState;
+  const state = data ?? empty;
+
+  const {
+    confidence,
+    documents,
+    journey,
+    activityFeed,
+    smartChecklist,
+    improvements,
+    insight,
+    recentUploads,
+  } = state;
 
   const greet = () => {
     const h = new Date().getHours();
@@ -56,35 +63,18 @@ function Dashboard() {
     return t("dashboard.goodEvening");
   };
 
-  const heroChecklist = [
-    { name: t("dashboard.checklist.identity"), done: true },
-    { name: t("dashboard.checklist.employment"), done: true },
-    { name: t("dashboard.checklist.income"), done: true },
-    { name: t("dashboard.checklist.residence"), done: false },
-  ];
+  // Checklist derived from journey (first 4 categories)
+  const heroChecklist = journey.slice(0, 4).map((j) => ({
+    name: t(`dashboard.checklist.${j.id}`, { defaultValue: j.name }),
+    done: j.done,
+  }));
 
-  const activityFeed = [
-    { icon: CheckCircle2, tone: "success", text: t("dashboard.activity.passport"), meta: "98%" },
-    { icon: CheckCircle2, tone: "success", text: t("dashboard.activity.salary"), meta: "£6,420/mo" },
-    { icon: CheckCircle2, tone: "success", text: t("dashboard.activity.visa"), meta: "" },
-    { icon: Zap, tone: "warn", text: t("dashboard.activity.utilityMissing"), meta: "+4%" },
-    { icon: CheckCircle2, tone: "success", text: t("dashboard.activity.noIssues"), meta: "" },
-  ];
+  const stepLabels = journey.map((j) =>
+    t(`dashboard.steps.${j.id}`, { defaultValue: j.name }),
+  );
 
-  const smartChecklist = [
-    { name: t("dashboard.smart.uploadUtility"), eta: "15 sec", impact: 4 },
-    { name: t("dashboard.smart.addReference"), eta: "20 sec", impact: 2 },
-  ];
-
-  const stepLabels = [
-    t("dashboard.steps.identity"),
-    t("dashboard.steps.income"),
-    t("dashboard.steps.employment"),
-    t("dashboard.steps.residence"),
-    t("dashboard.steps.review"),
-  ];
-
-
+  const excellent = confidence >= 95;
+  const gap = Math.max(0, 95 - confidence);
 
   return (
     <AppLayout>
@@ -121,11 +111,16 @@ function Dashboard() {
                   <Sparkles className="h-3.5 w-3.5" /> {t("common.aiVerified")}
                 </div>
                 <h2 className="mt-3 text-xl font-semibold tracking-tight md:text-[26px]">
-                  {t("dashboard.almostReady")}
+                  {excellent ? t("dashboard.excellentTier") : t("dashboard.almostReady")}
                 </h2>
                 <p className="mt-1.5 text-sm text-muted-foreground md:text-base">
-                  {t("dashboard.oneLeft")}
-                  <span className="font-medium text-foreground"> {t("dashboard.excellentTier")}</span>.
+                  {excellent ? insight.body : (
+                    <>
+                      {t("dashboard.oneLeft")}
+                      <span className="font-medium text-foreground"> {t("dashboard.excellentTier")}</span>
+                      {gap > 0 ? ` · +${gap}%` : ""}.
+                    </>
+                  )}
                 </p>
                 <div className="mt-3 flex items-center gap-2 text-xs text-muted-foreground">
                   <motion.span
@@ -177,7 +172,19 @@ function Dashboard() {
 
         {/* Signature: AI processing timeline */}
         <StaggerItem>
-          <AITimeline />
+          <AITimeline
+            steps={documents
+              .filter((d) => d.status === "verified" || d.status === "pending")
+              .slice(0, 4)
+              .map((d) => ({
+                label: `Reading ${d.fallbackName.toLowerCase()}`,
+                result:
+                  d.status === "verified"
+                    ? `${d.fallbackName} verified · ${d.confidence ?? 0}%`
+                    : `${d.fallbackName} processing…`,
+                done: d.status === "verified",
+              }))}
+          />
         </StaggerItem>
 
         {/* Journey */}
@@ -244,7 +251,7 @@ function Dashboard() {
           </div>
         </StaggerItem>
 
-        {/* Two column: insight + missing */}
+        {/* Two column: insight + smart checklist */}
         <div className="grid gap-4 md:grid-cols-2">
           <StaggerItem>
             <div className="h-full rounded-3xl border border-border/60 bg-card p-6">
@@ -252,12 +259,16 @@ function Dashboard() {
                 <Sparkles className="h-3.5 w-3.5" /> {t("dashboard.todayInsight")}
               </div>
               <h3 className="text-lg font-semibold tracking-tight">
-                {insights[0].title}
+                {insight.title}
               </h3>
-              <p className="mt-1.5 text-sm text-muted-foreground">{insights[0].body}</p>
+              <p className="mt-1.5 text-sm text-muted-foreground">{insight.body}</p>
 
               <div className="mt-5 space-y-2">
-                {improvements.map((imp) => (
+                {improvements.length === 0 ? (
+                  <div className="rounded-2xl bg-background/60 p-3 text-sm text-muted-foreground">
+                    {t("dashboard.noSuggestions", { defaultValue: "No suggestions yet — upload a document to get started." })}
+                  </div>
+                ) : improvements.map((imp) => (
                   <div
                     key={imp.title}
                     className="flex items-center justify-between rounded-2xl bg-background/60 p-3"
@@ -286,7 +297,11 @@ function Dashboard() {
                 </Link>
               </div>
               <div className="space-y-2">
-                {smartChecklist.map((s) => (
+                {smartChecklist.length === 0 ? (
+                  <div className="rounded-2xl bg-background/60 p-3 text-sm text-muted-foreground">
+                    {t("dashboard.allCaughtUp", { defaultValue: "You're all caught up." })}
+                  </div>
+                ) : smartChecklist.map((s) => (
                   <Link
                     to="/documents"
                     key={s.name}
@@ -322,28 +337,35 @@ function Dashboard() {
               <span className="text-xs text-muted-foreground">{t("common.live")}</span>
             </div>
             <ul className="space-y-1.5">
-              {activityFeed.map((a, i) => (
-                <motion.li
-                  key={i}
-                  initial={{ opacity: 0, x: -6 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.08 * i, ease: [0.2, 0.8, 0.2, 1] }}
-                  className="flex items-center gap-3 rounded-xl px-2 py-2"
-                >
-                  <a.icon
-                    className={
-                      "h-4 w-4 " +
-                      (a.tone === "success" ? "text-success" : "text-amber-500")
-                    }
-                  />
-                  <span className="flex-1 text-sm">{a.text}</span>
-                  {a.meta && (
-                    <span className="text-xs font-semibold text-muted-foreground tabular-nums">
-                      {a.meta}
-                    </span>
-                  )}
-                </motion.li>
-              ))}
+              {activityFeed.length === 0 ? (
+                <li className="rounded-xl px-2 py-2 text-sm text-muted-foreground">
+                  {t("dashboard.noActivity", { defaultValue: "No AI activity yet." })}
+                </li>
+              ) : activityFeed.map((a, i) => {
+                const Icon = a.iconKey === "check" ? CheckCircle2 : Zap;
+                return (
+                  <motion.li
+                    key={i}
+                    initial={{ opacity: 0, x: -6 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.08 * i, ease: [0.2, 0.8, 0.2, 1] }}
+                    className="flex items-center gap-3 rounded-xl px-2 py-2"
+                  >
+                    <Icon
+                      className={
+                        "h-4 w-4 " +
+                        (a.tone === "success" ? "text-success" : "text-amber-500")
+                      }
+                    />
+                    <span className="flex-1 text-sm">{a.text}</span>
+                    {a.meta && (
+                      <span className="text-xs font-semibold text-muted-foreground tabular-nums">
+                        {a.meta}
+                      </span>
+                    )}
+                  </motion.li>
+                );
+              })}
             </ul>
           </div>
         </StaggerItem>
@@ -361,22 +383,30 @@ function Dashboard() {
                   {t("dashboard.allDocuments")} <ArrowUpRight className="h-3.5 w-3.5" />
                 </Link>
               </div>
-              <ul className="divide-y divide-border/60">
-                {recent.map((d) => (
-                  <li key={d.id} className="flex items-center gap-3 py-3">
-                    <div className="grid h-10 w-10 place-items-center rounded-xl bg-accent text-accent-foreground">
-                      <d.icon className="h-5 w-5" />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="truncate text-sm font-semibold">{d.name}</div>
-                      <div className="text-xs text-muted-foreground">
-                        {t("common.verifiedByAi")} · {d.confidence}% {t("common.confidence").toLowerCase()}
+              {recentUploads.length === 0 ? (
+                <div className="rounded-2xl bg-background/60 p-4 text-sm text-muted-foreground">
+                  {t("dashboard.noUploads", { defaultValue: "No uploads yet — start with your passport." })}
+                </div>
+              ) : (
+                <ul className="divide-y divide-border/60">
+                  {recentUploads.map((d) => (
+                    <li key={d.id} className="flex items-center gap-3 py-3">
+                      <div className="grid h-10 w-10 place-items-center rounded-xl bg-accent text-accent-foreground">
+                        <d.icon className="h-5 w-5" />
                       </div>
-                    </div>
-                    <CheckCircle2 className="h-5 w-5 text-success" />
-                  </li>
-                ))}
-              </ul>
+                      <div className="min-w-0 flex-1">
+                        <div className="truncate text-sm font-semibold">
+                          {t(d.nameKey, { defaultValue: d.fallbackName })}
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          {t("common.verifiedByAi")} · {d.confidence ?? 0}% {t("common.confidence").toLowerCase()}
+                        </div>
+                      </div>
+                      <CheckCircle2 className="h-5 w-5 text-success" />
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
           </FadeIn>
         </StaggerItem>

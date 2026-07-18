@@ -166,8 +166,7 @@ function ReportPage() {
                   </div>
                 ))}
                 <div className="rounded-2xl bg-success/10 p-3 text-sm text-success">
-                  <span className="font-semibold">+{confidence - 74}%</span> uplift after
-                  AI cleaned up documents, spotted issues, and structured your profile.
+                  <span className="font-semibold">+{confidence - 74}%</span> {t("report.uplift")}
                 </div>
               </div>
             </div>
@@ -176,17 +175,17 @@ function ReportPage() {
 
         <StaggerItem className="md:col-span-2">
           <div className="rounded-3xl border border-border/60 bg-card p-6">
-            <h3 className="text-lg font-semibold tracking-tight">Application summary</h3>
+            <h3 className="text-lg font-semibold tracking-tight">{t("report.summary")}</h3>
             <dl className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-4">
               {[
-                ["Applicant", profile.name],
-                ["Occupation", profile.occupation],
-                ["Monthly Income", profile.monthlyIncome],
-                ["Visa Status", profile.visa],
-                ["Current Address", profile.address],
-                ["Nationality", profile.nationality],
-                ["Employment", profile.employment],
-                ["Confidence", `${confidence}% · Excellent`],
+                [t("report.fields.applicant"), profile.name],
+                [t("report.fields.occupation"), profile.occupation],
+                [t("report.fields.monthlyIncome"), profile.monthlyIncome],
+                [t("report.fields.visa"), profile.visa],
+                [t("report.fields.address"), profile.address],
+                [t("report.fields.nationality"), profile.nationality],
+                [t("report.fields.employment"), profile.employment],
+                [t("report.fields.confidence"), `${confidence}% · ${t("dashboard.excellentTier")}`],
               ].map(([k, v]) => (
                 <div key={k} className="rounded-2xl bg-background/60 p-3">
                   <dt className="text-[11px] uppercase tracking-wider text-muted-foreground">
@@ -201,7 +200,7 @@ function ReportPage() {
 
         <StaggerItem>
           <div className="h-full rounded-3xl border border-border/60 bg-card p-6">
-            <h3 className="text-lg font-semibold tracking-tight">Verified documents</h3>
+            <h3 className="text-lg font-semibold tracking-tight">{t("report.verifiedDocs")}</h3>
             <ul className="mt-4 space-y-2">
               {verified.map((d) => (
                 <li
@@ -223,7 +222,7 @@ function ReportPage() {
 
         <StaggerItem>
           <div className="h-full rounded-3xl border border-border/60 bg-card p-6">
-            <h3 className="text-lg font-semibold tracking-tight">Recommendations</h3>
+            <h3 className="text-lg font-semibold tracking-tight">{t("report.recommendations")}</h3>
             <ul className="mt-4 space-y-2">
               {missing.map((d) => (
                 <li
@@ -232,7 +231,7 @@ function ReportPage() {
                 >
                   <FileText className="h-5 w-5 text-primary" />
                   <div className="min-w-0 flex-1 truncate text-sm font-medium">
-                    Add {d.name.toLowerCase()}
+                    {t("report.add", { name: d.name.toLowerCase() })}
                   </div>
                 </li>
               ))}
@@ -256,7 +255,7 @@ function ReportPage() {
 
         <StaggerItem className="md:col-span-2 md:hidden">
           <button className="w-full inline-flex items-center justify-center gap-2 rounded-full gradient-primary px-5 py-4 text-sm font-semibold text-primary-foreground shadow-glow">
-            <Download className="h-4 w-4" /> Export PDF
+            <Download className="h-4 w-4" /> {t("report.exportPdf")}
           </button>
         </StaggerItem>
       </Stagger>

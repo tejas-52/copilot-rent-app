@@ -70,13 +70,13 @@ function Dashboard() {
 
         {/* Hero confidence card */}
         <StaggerItem>
-          <div className="relative overflow-hidden rounded-3xl border border-border/60 bg-card shadow-lg">
+          <div className="relative overflow-hidden rounded-[28px] border border-border/60 gradient-hero shadow-lg">
             <div
               aria-hidden
               className="absolute inset-0 opacity-70"
               style={{
                 background:
-                  "radial-gradient(600px circle at 90% -10%, color-mix(in oklab, var(--primary) 22%, transparent), transparent 60%)",
+                  "radial-gradient(600px circle at 90% -10%, color-mix(in oklab, #3B82F6 20%, transparent), transparent 60%)",
               }}
             />
             <div className="relative grid gap-6 p-6 md:grid-cols-[auto_1fr] md:items-center md:gap-10 md:p-10">
@@ -85,25 +85,33 @@ function Dashboard() {
                 <div className="inline-flex items-center gap-1.5 rounded-full bg-accent px-3 py-1 text-xs font-medium text-accent-foreground">
                   <Sparkles className="h-3.5 w-3.5" /> AI-verified
                 </div>
-                <h2 className="mt-3 text-xl font-semibold tracking-tight md:text-2xl">
+                <h2 className="mt-3 text-xl font-semibold tracking-tight md:text-[26px]">
                   You're almost ready to apply.
                 </h2>
                 <p className="mt-1.5 text-sm text-muted-foreground md:text-base">
-                  Complete residence verification to unlock the highest confidence tier
-                  and stand out to landlords.
+                  Only one verification left — complete residence proof to unlock
+                  <span className="font-medium text-foreground"> Excellent</span> tier.
                 </p>
+                <div className="mt-3 flex items-center gap-2 text-xs text-muted-foreground">
+                  <motion.span
+                    animate={{ opacity: [0.4, 1, 0.4] }}
+                    transition={{ duration: 1.8, repeat: Infinity }}
+                    className="h-1.5 w-1.5 rounded-full bg-success"
+                  />
+                  Estimated completion · about 40 seconds
+                </div>
 
                 <div className="mt-5 flex flex-wrap gap-2">
                   <Link
                     to="/documents"
-                    className="group inline-flex items-center gap-2 rounded-full gradient-primary px-5 py-3 text-sm font-semibold text-primary-foreground shadow-glow transition-transform active:scale-[0.98]"
+                    className="group inline-flex items-center gap-2 rounded-full btn-primary-premium px-6 py-3.5 text-sm font-semibold"
                   >
                     Continue application
                     <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
                   </Link>
                   <Link
                     to="/report"
-                    className="inline-flex items-center gap-2 rounded-full border border-border bg-background px-5 py-3 text-sm font-semibold text-foreground hover:bg-accent"
+                    className="inline-flex items-center gap-2 rounded-full border border-border bg-background/70 px-5 py-3 text-sm font-semibold text-foreground transition-colors hover:bg-accent"
                   >
                     View report
                   </Link>
@@ -112,6 +120,7 @@ function Dashboard() {
             </div>
           </div>
         </StaggerItem>
+
 
         {/* Journey */}
         <StaggerItem>

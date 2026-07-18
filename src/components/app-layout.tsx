@@ -12,22 +12,27 @@ import {
 } from "lucide-react";
 import type { ReactNode } from "react";
 import { toast } from "sonner";
+import { useTranslation } from "react-i18next";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useAuth } from "@/lib/auth-context";
 import { AuthGate } from "@/components/auth-gate";
 
-const nav = [
-  { to: "/", label: "Home", icon: HomeIcon, exact: true },
-  { to: "/documents", label: "Documents", icon: FolderOpen },
-  { to: "/assistant", label: "Assistant", icon: Bot },
-  { to: "/report", label: "Report", icon: FileCheck2 },
-  { to: "/profile", label: "Profile", icon: User },
-] as const;
+function useNav() {
+  const { t } = useTranslation();
+  return [
+    { to: "/", label: t("nav.home"), icon: HomeIcon, exact: true },
+    { to: "/documents", label: t("nav.documents"), icon: FolderOpen },
+    { to: "/assistant", label: t("nav.assistant"), icon: Bot },
+    { to: "/report", label: t("nav.report"), icon: FileCheck2 },
+    { to: "/profile", label: t("nav.profile"), icon: User },
+  ] as const;
+}
 
 function useIsActive(to: string, exact?: boolean) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   return exact ? pathname === to : pathname === to || pathname.startsWith(to + "/");
 }
+
 
 function NavItem({
   to,

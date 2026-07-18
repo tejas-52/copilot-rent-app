@@ -10,10 +10,14 @@ import {
   Upload,
   X,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
 import { AppLayout } from "@/components/app-layout";
 import { SectionHeader, Stagger, StaggerItem } from "@/components/ui-bits";
 import { documents, type DocStatus, type DocumentItem } from "@/lib/app-data";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/lib/auth-context";
+import { getOrCreateApplication, registerDocument, runPipelineForDocument } from "@/lib/pipeline.functions";
 
 export const Route = createFileRoute("/documents")({
   head: () => ({

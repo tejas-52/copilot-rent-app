@@ -10,10 +10,14 @@ import {
   Upload,
   X,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
 import { AppLayout } from "@/components/app-layout";
 import { SectionHeader, Stagger, StaggerItem } from "@/components/ui-bits";
 import { documents, type DocStatus, type DocumentItem } from "@/lib/app-data";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/lib/auth-context";
+import { getOrCreateApplication, registerDocument, runPipelineForDocument } from "@/lib/pipeline.functions";
 
 export const Route = createFileRoute("/documents")({
   head: () => ({
@@ -110,6 +114,9 @@ function UploadModal({ doc, onClose }: { doc: DocumentItem; onClose: () => void 
     doc.status === "missing" || doc.status === "pending" ? "drop" : "done",
   );
   const [step, setStep] = useState(0);
+  const [extracted, setExtracted] = useState<{ label: string; value: string }[] | null>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
+  const { user, isDemo } = useAuth();
 
   useEffect(() => {
     if (phase !== "reading") return;
@@ -119,11 +126,60 @@ function UploadModal({ doc, onClose }: { doc: DocumentItem; onClose: () => void 
   }, [phase, step]);
 
   useEffect(() => {
-    if (phase === "reading" && step === readingSteps.length - 1) {
+    if (phase === "reading" && step === readingSteps.length - 1 && !extracted) {
       const t = setTimeout(() => setPhase("done"), 700);
       return () => clearTimeout(t);
     }
-  }, [phase, step]);
+  }, [phase, step, extracted]);
+
+  async function handleFile(file: File) {
+    setPhase("reading");
+    setStep(0);
+    if (isDemo || !user) {
+      // demo mode: just show the animation
+      return;
+    }
+    try {
+      const app = await getOrCreateApplication();
+      const path = `${user.id}/${app.id}/${Date.now()}-${file.name}`;
+      const { error: upErr } = await supabase.storage
+        .from("rental-documents")
+        .upload(path, file, { contentType: file.type, upsert: false });
+      if (upErr) throw upErr;
+      const registered = await registerDocument({
+        data: {
+          applicationId: app.id,
+          storagePath: path,
+          fileName: file.name,
+          mimeType: file.type || "application/octet-stream",
+        },
+      });
+      const res = await runPipelineForDocument({
+        data: { documentId: registered.id, applicationId: app.id },
+      });
+      toast.success(`Verified · confidence ${res.score}%`);
+      // fetch extraction to display
+      const { data: ex } = await supabase
+        .from("extractions")
+        .select("data")
+        .eq("document_id", registered.id)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (ex?.data) {
+        setExtracted(
+          Object.entries(ex.data as Record<string, unknown>)
+            .filter(([, v]) => v)
+            .slice(0, 6)
+            .map(([k, v]) => ({ label: k.replace(/_/g, " "), value: String(v) })),
+        );
+      }
+      setPhase("done");
+    } catch (e: any) {
+      toast.error(e?.message ?? "Upload failed");
+      setPhase("drop");
+    }
+  }
 
   const Icon = doc.icon;
 
@@ -166,10 +222,7 @@ function UploadModal({ doc, onClose }: { doc: DocumentItem; onClose: () => void 
                 exit={{ opacity: 0 }}
               >
                 <button
-                  onClick={() => {
-                    setPhase("reading");
-                    setStep(0);
-                  }}
+                  onClick={() => fileRef.current?.click()}
                   className="relative flex w-full flex-col items-center justify-center gap-3 rounded-3xl border-2 border-dashed border-border bg-background/60 p-10 text-center transition-colors hover:border-primary/60 hover:bg-accent/40"
                 >
                   <motion.div
@@ -186,21 +239,25 @@ function UploadModal({ doc, onClose }: { doc: DocumentItem; onClose: () => void 
                     </div>
                   </div>
                 </button>
+                <input
+                  ref={fileRef}
+                  type="file"
+                  accept="image/*,application/pdf"
+                  className="hidden"
+                  onChange={(e) => {
+                    const f = e.target.files?.[0];
+                    if (f) void handleFile(f);
+                  }}
+                />
                 <div className="mt-3 grid grid-cols-2 gap-2">
                   <button
-                    onClick={() => {
-                      setPhase("reading");
-                      setStep(0);
-                    }}
+                    onClick={() => fileRef.current?.click()}
                     className="inline-flex items-center justify-center gap-2 rounded-2xl border border-border bg-background px-4 py-3 text-sm font-semibold hover:bg-accent"
                   >
                     <Camera className="h-4 w-4" /> Use camera
                   </button>
                   <button
-                    onClick={() => {
-                      setPhase("reading");
-                      setStep(0);
-                    }}
+                    onClick={() => fileRef.current?.click()}
                     className="inline-flex items-center justify-center gap-2 rounded-2xl gradient-primary px-4 py-3 text-sm font-semibold text-primary-foreground shadow-glow"
                   >
                     Choose file
@@ -271,9 +328,9 @@ function UploadModal({ doc, onClose }: { doc: DocumentItem; onClose: () => void 
                     </span>
                   )}
                 </div>
-                {doc.extracted ? (
+                {(extracted ?? doc.extracted) ? (
                   <dl className="grid grid-cols-2 gap-3">
-                    {doc.extracted.map((e) => (
+                    {(extracted ?? doc.extracted!).map((e) => (
                       <div
                         key={e.label}
                         className="rounded-2xl bg-background/60 p-3"

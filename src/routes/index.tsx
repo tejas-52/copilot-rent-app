@@ -97,7 +97,7 @@ function Dashboard() {
                 {greet()}, {firstName} 👋
               </div>
               <h1 className="mt-1 text-2xl font-semibold tracking-tight md:text-[32px]">
-                Let's get you rental ready.
+                {t("dashboard.letsGetReady")}
               </h1>
             </div>
           </div>
@@ -118,14 +118,14 @@ function Dashboard() {
               <ConfidenceRing value={confidence} />
               <div className="min-w-0">
                 <div className="inline-flex items-center gap-1.5 rounded-full bg-accent px-3 py-1 text-xs font-medium text-accent-foreground">
-                  <Sparkles className="h-3.5 w-3.5" /> AI-verified
+                  <Sparkles className="h-3.5 w-3.5" /> {t("common.aiVerified")}
                 </div>
                 <h2 className="mt-3 text-xl font-semibold tracking-tight md:text-[26px]">
-                  You're almost ready to apply.
+                  {t("dashboard.almostReady")}
                 </h2>
                 <p className="mt-1.5 text-sm text-muted-foreground md:text-base">
-                  Only one verification left — complete residence proof to unlock
-                  <span className="font-medium text-foreground"> Excellent</span> tier.
+                  {t("dashboard.oneLeft")}
+                  <span className="font-medium text-foreground"> {t("dashboard.excellentTier")}</span>.
                 </p>
                 <div className="mt-3 flex items-center gap-2 text-xs text-muted-foreground">
                   <motion.span
@@ -133,7 +133,7 @@ function Dashboard() {
                     transition={{ duration: 1.8, repeat: Infinity }}
                     className="h-1.5 w-1.5 rounded-full bg-success"
                   />
-                  Estimated completion · about 40 seconds
+                  {t("dashboard.estCompletion")}
                 </div>
 
                 <div className="mt-5 grid grid-cols-2 gap-2 rounded-2xl border border-border/50 bg-background/60 p-3 sm:grid-cols-4">
@@ -160,14 +160,14 @@ function Dashboard() {
                     to="/documents"
                     className="group inline-flex items-center gap-2 rounded-full btn-primary-premium px-6 py-3.5 text-sm font-semibold"
                   >
-                    Continue application
+                    {t("dashboard.continueApp")}
                     <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
                   </Link>
                   <Link
                     to="/report"
                     className="inline-flex items-center gap-2 rounded-full border border-border bg-background/70 px-5 py-3 text-sm font-semibold text-foreground transition-colors hover:bg-accent"
                   >
-                    View report
+                    {t("dashboard.viewReport")}
                   </Link>
                 </div>
               </div>
@@ -183,9 +183,9 @@ function Dashboard() {
         {/* Journey */}
         <StaggerItem>
           <SectionHeader
-            eyebrow="Journey"
-            title="Your progress"
-            subtitle="Five gentle steps to a complete application."
+            eyebrow={t("dashboard.journey")}
+            title={t("dashboard.yourProgress")}
+            subtitle={t("dashboard.journeySubtitle")}
           />
           <div className="rounded-3xl border border-border/60 bg-card p-4 md:p-6">
             <ol className="grid gap-3 md:grid-cols-5">
@@ -226,15 +226,15 @@ function Dashboard() {
                       )}
                     </div>
                     <div className="min-w-0">
-                      <div className="text-sm font-semibold">{step.name}</div>
+                      <div className="text-sm font-semibold">{stepLabels[i] ?? step.name}</div>
                       <div className="text-xs text-muted-foreground">
                         {state === "done"
-                          ? "Complete"
+                          ? t("common.complete")
                           : state === "active"
-                            ? "In progress"
+                            ? t("common.inProgress")
                             : state === "locked"
-                              ? "Locked"
-                              : "Up next"}
+                              ? t("common.locked")
+                              : t("common.upNext")}
                       </div>
                     </div>
                   </motion.li>
@@ -249,7 +249,7 @@ function Dashboard() {
           <StaggerItem>
             <div className="h-full rounded-3xl border border-border/60 bg-card p-6">
               <div className="mb-3 flex items-center gap-2 text-xs font-medium uppercase tracking-[0.14em] text-primary">
-                <Sparkles className="h-3.5 w-3.5" /> Today's AI insight
+                <Sparkles className="h-3.5 w-3.5" /> {t("dashboard.todayInsight")}
               </div>
               <h3 className="text-lg font-semibold tracking-tight">
                 {insights[0].title}
@@ -276,13 +276,13 @@ function Dashboard() {
             <div className="h-full rounded-3xl border border-border/60 bg-card p-6">
               <div className="mb-4 flex items-center justify-between">
                 <h3 className="text-lg font-semibold tracking-tight">
-                  Smart checklist
+                  {t("dashboard.smartChecklist")}
                 </h3>
                 <Link
                   to="/documents"
                   className="inline-flex items-center gap-1 text-xs font-semibold text-primary"
                 >
-                  See all <ChevronRight className="h-3.5 w-3.5" />
+                  {t("common.seeAll")} <ChevronRight className="h-3.5 w-3.5" />
                 </Link>
               </div>
               <div className="space-y-2">
@@ -317,9 +317,9 @@ function Dashboard() {
             <div className="mb-4 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Sparkles className="h-4 w-4 text-primary" />
-                <h3 className="text-lg font-semibold tracking-tight">AI activity</h3>
+                <h3 className="text-lg font-semibold tracking-tight">{t("dashboard.aiActivity")}</h3>
               </div>
-              <span className="text-xs text-muted-foreground">Live</span>
+              <span className="text-xs text-muted-foreground">{t("common.live")}</span>
             </div>
             <ul className="space-y-1.5">
               {activityFeed.map((a, i) => (
@@ -353,12 +353,12 @@ function Dashboard() {
           <FadeIn>
             <div className="rounded-3xl border border-border/60 bg-card p-6">
               <div className="mb-4 flex items-center justify-between">
-                <h3 className="text-lg font-semibold tracking-tight">Recent uploads</h3>
+                <h3 className="text-lg font-semibold tracking-tight">{t("dashboard.recentUploads")}</h3>
                 <Link
                   to="/documents"
                   className="inline-flex items-center gap-1 text-xs font-semibold text-primary"
                 >
-                  All documents <ArrowUpRight className="h-3.5 w-3.5" />
+                  {t("dashboard.allDocuments")} <ArrowUpRight className="h-3.5 w-3.5" />
                 </Link>
               </div>
               <ul className="divide-y divide-border/60">
@@ -370,7 +370,7 @@ function Dashboard() {
                     <div className="min-w-0 flex-1">
                       <div className="truncate text-sm font-semibold">{d.name}</div>
                       <div className="text-xs text-muted-foreground">
-                        AI verified · {d.confidence}% confidence
+                        {t("common.verifiedByAi")} · {d.confidence}% {t("common.confidence").toLowerCase()}
                       </div>
                     </div>
                     <CheckCircle2 className="h-5 w-5 text-success" />

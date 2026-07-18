@@ -73,6 +73,7 @@ function greet() {
 
 function Dashboard() {
   const recent = documents.filter((d) => d.status === "verified").slice(0, 3);
+  const { firstName } = useAuth();
 
 
   return (
@@ -83,7 +84,7 @@ function Dashboard() {
           <div className="flex items-end justify-between gap-4">
             <div>
               <div className="text-sm text-muted-foreground">
-                {greet()}, {useAuth().firstName} 👋
+                {greet()}, {firstName} 👋
               </div>
               <h1 className="mt-1 text-2xl font-semibold tracking-tight md:text-[32px]">
                 Let's get you rental ready.

@@ -9,6 +9,7 @@ import {
   User,
 } from "lucide-react";
 import type { ReactNode } from "react";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const nav = [
   { to: "/", label: "Home", icon: HomeIcon, exact: true },

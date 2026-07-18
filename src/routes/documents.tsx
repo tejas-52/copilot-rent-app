@@ -13,9 +13,11 @@ import {
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
+import { useQueryClient } from "@tanstack/react-query";
 import { AppLayout } from "@/components/app-layout";
 import { SectionHeader, Stagger, StaggerItem } from "@/components/ui-bits";
-import { documents, type DocStatus, type DocumentItem } from "@/lib/app-data";
+import type { DocStatus } from "@/lib/document-registry";
+import { useAppState, emptyAppState, type DocumentUI } from "@/lib/app-queries";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { getOrCreateApplication, registerDocument, runPipelineForDocument } from "@/lib/pipeline.functions";
@@ -43,7 +45,7 @@ function useStatusMeta(): Record<DocStatus, { label: string; className: string; 
   };
 }
 
-function DocCard({ doc, onOpen }: { doc: DocumentItem; onOpen: (d: DocumentItem) => void }) {
+function DocCard({ doc, onOpen }: { doc: DocumentUI; onOpen: (d: DocumentUI) => void }) {
   const { t } = useTranslation();
   const s = useStatusMeta()[doc.status];
   const Icon = doc.icon;
@@ -54,6 +56,7 @@ function DocCard({ doc, onOpen }: { doc: DocumentItem; onOpen: (d: DocumentItem)
       : doc.status === "issue"
         ? "border border-warning/50 bg-card hover:border-warning"
         : "border border-border/60 bg-card";
+  const name = t(doc.nameKey, { defaultValue: doc.fallbackName });
   return (
     <button
       onClick={() => onOpen(doc)}
@@ -78,11 +81,11 @@ function DocCard({ doc, onOpen }: { doc: DocumentItem; onOpen: (d: DocumentItem)
         </span>
       </div>
       <div className="mt-auto pt-5">
-        <div className="text-base font-semibold tracking-tight">{doc.name}</div>
+        <div className="text-base font-semibold tracking-tight">{name}</div>
         <div className="mt-1 text-xs text-muted-foreground">
-          {doc.status === "verified" && `${doc.confidence}% ${t("common.confidence").toLowerCase()}`}
+          {doc.status === "verified" && `${doc.confidence ?? 0}% ${t("common.confidence").toLowerCase()}`}
           {doc.status === "pending" && t("documents.analyzing")}
-          {doc.status === "issue" && doc.issue}
+          {doc.status === "issue" && (doc.issue ?? t("common.needsAttention"))}
           {doc.status === "missing" && t("documents.tapToUpload")}
         </div>
       </div>
@@ -91,7 +94,7 @@ function DocCard({ doc, onOpen }: { doc: DocumentItem; onOpen: (d: DocumentItem)
 }
 
 
-function UploadModal({ doc, onClose }: { doc: DocumentItem; onClose: () => void }) {
+function UploadModal({ doc, onClose, onRefresh }: { doc: DocumentUI; onClose: () => void; onRefresh: () => void }) {
   const { t } = useTranslation();
   const readingSteps = useMemo(
     () => [
@@ -107,23 +110,25 @@ function UploadModal({ doc, onClose }: { doc: DocumentItem; onClose: () => void 
     doc.status === "missing" || doc.status === "pending" ? "drop" : "done",
   );
   const [step, setStep] = useState(0);
-  const [extracted, setExtracted] = useState<{ label: string; value: string }[] | null>(null);
+  const [extracted, setExtracted] = useState<{ label: string; value: string }[] | null>(
+    doc.extracted && doc.extracted.length > 0 ? doc.extracted : null,
+  );
   const fileRef = useRef<HTMLInputElement>(null);
   const { user, isDemo } = useAuth();
 
   useEffect(() => {
     if (phase !== "reading") return;
     if (step >= readingSteps.length - 1) return;
-    const t = setTimeout(() => setStep((s) => s + 1), 700);
-    return () => clearTimeout(t);
-  }, [phase, step]);
+    const to = setTimeout(() => setStep((s) => s + 1), 700);
+    return () => clearTimeout(to);
+  }, [phase, step, readingSteps.length]);
 
   useEffect(() => {
     if (phase === "reading" && step === readingSteps.length - 1 && !extracted) {
-      const t = setTimeout(() => setPhase("done"), 700);
-      return () => clearTimeout(t);
+      const to = setTimeout(() => setPhase("done"), 700);
+      return () => clearTimeout(to);
     }
-  }, [phase, step, extracted]);
+  }, [phase, step, extracted, readingSteps.length]);
 
   async function handleFile(file: File) {
     setPhase("reading");
@@ -168,6 +173,7 @@ function UploadModal({ doc, onClose }: { doc: DocumentItem; onClose: () => void 
         );
       }
       setPhase("done");
+      onRefresh();
     } catch (e: any) {
       toast.error(e?.message ?? t("documents.toasts.uploadFailed"));
       setPhase("drop");
@@ -175,6 +181,7 @@ function UploadModal({ doc, onClose }: { doc: DocumentItem; onClose: () => void 
   }
 
   const Icon = doc.icon;
+  const name = t(doc.nameKey, { defaultValue: doc.fallbackName });
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-0 backdrop-blur-sm md:items-center md:p-6">
@@ -191,7 +198,7 @@ function UploadModal({ doc, onClose }: { doc: DocumentItem; onClose: () => void 
               <Icon className="h-5 w-5" />
             </div>
             <div>
-              <div className="text-sm font-semibold">{doc.name}</div>
+              <div className="text-sm font-semibold">{name}</div>
               <div className="text-xs text-muted-foreground">
                 {phase === "done" ? t("common.verifiedByAi") : t("documents.uploadSecurely")}
               </div>
@@ -315,15 +322,15 @@ function UploadModal({ doc, onClose }: { doc: DocumentItem; onClose: () => void 
                 <div className="mb-4 flex items-center gap-2">
                   <CheckCircle2 className="h-5 w-5 text-success" />
                   <div className="text-sm font-semibold">{t("common.verifiedByAi")}</div>
-                  {doc.confidence && (
+                  {doc.confidence != null && (
                     <span className="ml-auto rounded-full bg-success/15 px-2.5 py-1 text-xs font-semibold text-success">
                       {doc.confidence}% {t("common.confidence").toLowerCase()}
                     </span>
                   )}
                 </div>
-                {(extracted ?? doc.extracted) ? (
+                {extracted && extracted.length > 0 ? (
                   <dl className="grid grid-cols-2 gap-3">
-                    {(extracted ?? doc.extracted!).map((e) => (
+                    {extracted.map((e) => (
                       <div
                         key={e.label}
                         className="rounded-2xl bg-background/60 p-3"
@@ -340,7 +347,7 @@ function UploadModal({ doc, onClose }: { doc: DocumentItem; onClose: () => void 
                     {t("documents.empty")}
                   </p>
                 )}
-                {doc.status === "issue" && (
+                {doc.status === "issue" && doc.issue && (
                   <div className="mt-4 rounded-2xl border border-warning/40 bg-warning/10 p-4">
                     <div className="flex items-start gap-2">
                       <AlertTriangle className="mt-0.5 h-4 w-4 text-warning-foreground" />
@@ -380,8 +387,14 @@ function UploadModal({ doc, onClose }: { doc: DocumentItem; onClose: () => void 
 
 function DocumentsPage() {
   const { t } = useTranslation();
-  const [open, setOpen] = useState<DocumentItem | null>(null);
+  const [open, setOpen] = useState<DocumentUI | null>(null);
+  const { data } = useAppState();
+  const state = data ?? emptyAppState;
+  const qc = useQueryClient();
+  const documents = state.documents;
   const verified = documents.filter((d) => d.status === "verified").length;
+
+  const refresh = () => qc.invalidateQueries({ queryKey: ["app-state"] });
 
   return (
     <AppLayout>
@@ -400,7 +413,7 @@ function DocumentsPage() {
       </Stagger>
 
       <AnimatePresence>
-        {open && <UploadModal doc={open} onClose={() => setOpen(null)} />}
+        {open && <UploadModal doc={open} onClose={() => setOpen(null)} onRefresh={refresh} />}
       </AnimatePresence>
     </AppLayout>
   );

@@ -12,7 +12,8 @@ import {
 import { useTranslation } from "react-i18next";
 import { AppLayout } from "@/components/app-layout";
 import { SectionHeader, Stagger, StaggerItem } from "@/components/ui-bits";
-import { profile } from "@/lib/app-data";
+import { useAuth } from "@/lib/auth-context";
+import { useAppState, emptyAppState } from "@/lib/app-queries";
 
 export const Route = createFileRoute("/profile")({
   head: () => ({
@@ -26,14 +27,24 @@ export const Route = createFileRoute("/profile")({
 
 function ProfilePage() {
   const { t } = useTranslation();
+  const { displayName, initials, profile } = useAuth();
+  const { data } = useAppState();
+  const state = data ?? emptyAppState;
+  const { profileSummary, confidence } = state;
+
+  const dash = "—";
+  const fullName = profileSummary.fullName ?? displayName;
   const fields = [
-    { label: t("profile.fields.occupation"), value: profile.occupation, icon: Briefcase },
-    { label: t("profile.fields.nationality"), value: profile.nationality, icon: Globe2 },
-    { label: t("profile.fields.monthlyIncome"), value: profile.monthlyIncome, icon: Wallet },
-    { label: t("profile.fields.address"), value: profile.address, icon: MapPin },
-    { label: t("profile.fields.employment"), value: profile.employment, icon: Briefcase },
-    { label: t("profile.fields.visa"), value: profile.visa, icon: ShieldCheck },
+    { label: t("profile.fields.occupation"), value: profileSummary.occupation ?? dash, icon: Briefcase },
+    { label: t("profile.fields.nationality"), value: profileSummary.nationality ?? profile?.country ?? dash, icon: Globe2 },
+    { label: t("profile.fields.monthlyIncome"), value: profileSummary.monthlyIncome ?? dash, icon: Wallet },
+    { label: t("profile.fields.address"), value: profileSummary.address ?? dash, icon: MapPin },
+    { label: t("profile.fields.employment"),
+      value: [profileSummary.employer, profile?.employment_status].filter(Boolean).join(" · ") || dash,
+      icon: Briefcase },
+    { label: t("profile.fields.visa"), value: profileSummary.visaStatus ?? dash, icon: ShieldCheck },
   ];
+
   return (
     <AppLayout>
       <SectionHeader
@@ -46,17 +57,19 @@ function ProfilePage() {
         <div className="flex flex-col items-center gap-4 text-center md:flex-row md:items-center md:gap-6 md:text-left">
           <div className="relative">
             <div className="grid h-24 w-24 place-items-center rounded-3xl gradient-primary text-2xl font-semibold text-primary-foreground shadow-glow">
-              {profile.photoInitials}
+              {initials}
             </div>
             <div className="absolute -bottom-1.5 -right-1.5 grid h-7 w-7 place-items-center rounded-full border-4 border-card bg-success text-success-foreground">
               <BadgeCheck className="h-3.5 w-3.5" />
             </div>
           </div>
           <div className="min-w-0 flex-1">
-            <h2 className="text-2xl font-semibold tracking-tight">{profile.name}</h2>
-            <p className="text-sm text-muted-foreground">{profile.occupation}</p>
+            <h2 className="text-2xl font-semibold tracking-tight">{fullName}</h2>
+            <p className="text-sm text-muted-foreground">
+              {profileSummary.occupation ?? profile?.employment_status ?? t("profile.title")}
+            </p>
             <div className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-success/15 px-3 py-1 text-xs font-semibold text-success">
-              <Home className="h-3.5 w-3.5" /> {t("profile.rentalConfidence")} 94%
+              <Home className="h-3.5 w-3.5" /> {t("profile.rentalConfidence")} {confidence}%
             </div>
           </div>
           <button className="inline-flex items-center gap-2 rounded-full border border-border bg-background px-4 py-2 text-sm font-semibold hover:bg-accent">

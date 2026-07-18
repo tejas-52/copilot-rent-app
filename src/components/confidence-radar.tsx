@@ -1,14 +1,23 @@
 import { motion, useMotionValue, useTransform, animate } from "framer-motion";
 import { useEffect } from "react";
 
-const axes = [
-  { key: "Identity", value: 98 },
-  { key: "Income", value: 92 },
-  { key: "Employment", value: 96 },
-  { key: "Residence", value: 68 },
+export type RadarAxis = { key: string; label: string; value: number };
+
+const DEFAULT_AXES: RadarAxis[] = [
+  { key: "identity", label: "Identity", value: 0 },
+  { key: "income", label: "Income", value: 0 },
+  { key: "employment", label: "Employment", value: 0 },
+  { key: "residence", label: "Residence", value: 0 },
 ];
 
-export function ConfidenceRadar({ size = 260 }: { size?: number }) {
+export function ConfidenceRadar({
+  size = 260,
+  axes: axesProp,
+}: {
+  size?: number;
+  axes?: RadarAxis[];
+}) {
+  const axes = axesProp && axesProp.length >= 3 ? axesProp : DEFAULT_AXES;
   const cx = size / 2;
   const cy = size / 2;
   const r = size / 2 - 34;
@@ -75,7 +84,7 @@ export function ConfidenceRadar({ size = 260 }: { size?: number }) {
                 dominantBaseline="middle"
                 className="fill-foreground text-[11px] font-semibold"
               >
-                {a.key}
+                {a.label}
               </text>
             </g>
           );
@@ -84,8 +93,8 @@ export function ConfidenceRadar({ size = 260 }: { size?: number }) {
       <div className="mt-4 grid w-full grid-cols-2 gap-2">
         {axes.map((a) => (
           <div key={a.key} className="flex items-center justify-between rounded-xl bg-background/60 px-3 py-2 text-xs">
-            <span className="text-muted-foreground">{a.key}</span>
-            <span className="font-semibold tabular-nums">{a.value}%</span>
+            <span className="text-muted-foreground">{a.label}</span>
+            <span className="font-semibold tabular-nums">{Math.round(a.value)}%</span>
           </div>
         ))}
       </div>

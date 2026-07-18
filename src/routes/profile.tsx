@@ -13,7 +13,7 @@ import { useTranslation } from "react-i18next";
 import { AppLayout } from "@/components/app-layout";
 import { SectionHeader, Stagger, StaggerItem } from "@/components/ui-bits";
 import { useAuth } from "@/lib/auth-context";
-import { useAppState } from "@/lib/app-queries";
+import { useAppState, emptyAppState } from "@/lib/app-queries";
 
 export const Route = createFileRoute("/profile")({
   head: () => ({

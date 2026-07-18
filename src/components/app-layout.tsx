@@ -193,7 +193,7 @@ function UserMenu() {
   const { t } = useTranslation();
   const { displayName, profile, initials, isDemo, signOut } = useAuth();
   const navigate = useNavigate();
-  const email = isDemo ? t("common.loading") : profile?.email ?? "";
+  const email = isDemo ? "Demo Mode · sample data" : profile?.email ?? "";
   const handleSignOut = async () => {
     await signOut();
     toast.success(t("auth.toasts.signedOut"));

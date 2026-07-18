@@ -33,7 +33,7 @@ async function getBearerHeaders(): Promise<Record<string, string>> {
 function AssistantPage() {
   const { t, i18n } = useTranslation();
   const language = i18n.language?.split("-")[0] ?? "en";
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isDemo } = useAuth();
 
   const suggestions = [
     t("assistant.suggestions.why"),
@@ -91,11 +91,21 @@ function AssistantPage() {
 
   const thinking = status === "submitted" || status === "streaming";
 
-  // Load prior chat history
+  // Load prior chat history (or seed a scripted conversation in demo mode)
   useEffect(() => {
     if (historyLoadedRef.current || !isAuthenticated) return;
     historyLoadedRef.current = true;
     (async () => {
+      if (isDemo) {
+        const { DEMO_CHAT } = await import("@/lib/demo-data");
+        const history: UIMessage[] = DEMO_CHAT.map((m) => ({
+          id: m.id,
+          role: m.role,
+          parts: [{ type: "text", text: m.text }],
+        }));
+        setMessages([welcomeMessage, ...history]);
+        return;
+      }
       const { data: app } = await supabase
         .from("applications")
         .select("id")
@@ -117,7 +127,7 @@ function AssistantPage() {
       }));
       setMessages([welcomeMessage, ...history]);
     })();
-  }, [isAuthenticated, setMessages, welcomeMessage]);
+  }, [isAuthenticated, isDemo, setMessages, welcomeMessage]);
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -187,6 +197,26 @@ function AssistantPage() {
     if (!trimmed || thinking) return;
     setInput("");
     if (voiceConvoRef.current) setUserTranscript(trimmed);
+    if (isDemo) {
+      const userMsg: UIMessage = {
+        id: `demo-u-${Date.now()}`,
+        role: "user",
+        parts: [{ type: "text", text: trimmed }],
+      };
+      setMessages((prev) => [...prev, userMsg]);
+      void (async () => {
+        const { demoReplyFor } = await import("@/lib/demo-data");
+        const reply = demoReplyFor(trimmed);
+        await new Promise((r) => setTimeout(r, 650));
+        const assistantMsg: UIMessage = {
+          id: `demo-a-${Date.now()}`,
+          role: "assistant",
+          parts: [{ type: "text", text: reply }],
+        };
+        setMessages((prev) => [...prev, assistantMsg]);
+      })();
+      return;
+    }
     void sendMessage({ text: trimmed });
   };
 

@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { AppLayout } from "@/components/app-layout";
 import { ConfidenceRing } from "@/components/confidence-ring";
 import { ConfidenceRadar } from "@/components/confidence-radar";
@@ -36,6 +37,7 @@ export const Route = createFileRoute("/report")({
 });
 
 function ReportPage() {
+  const { t } = useTranslation();
   const verified = documents.filter((d) => d.status === "verified");
   const missing = documents.filter((d) => d.status !== "verified");
   const [landlord, setLandlord] = useState(false);
@@ -43,13 +45,9 @@ function ReportPage() {
   return (
     <AppLayout>
       <SectionHeader
-        eyebrow="Report"
-        title={landlord ? "Landlord preview" : "Your rental application report"}
-        subtitle={
-          landlord
-            ? "This is exactly what your landlord sees when you share this application."
-            : "A single, landlord-ready summary — reviewed by AI."
-        }
+        eyebrow={t("nav.report")}
+        title={landlord ? t("report.landlordTitle") : t("report.title")}
+        subtitle={landlord ? t("report.landlordSubtitle") : t("report.subtitle")}
         action={
           <div className="hidden md:flex items-center gap-2">
             <button
@@ -57,10 +55,10 @@ function ReportPage() {
               className="inline-flex items-center gap-2 rounded-full border border-border bg-background/70 px-5 py-3 text-sm font-semibold transition-colors hover:bg-accent"
             >
               <Eye className="h-4 w-4" />
-              {landlord ? "Applicant view" : "Landlord preview"}
+              {landlord ? t("report.applicantView") : t("report.landlordPreview")}
             </button>
             <button className="inline-flex items-center gap-2 rounded-full gradient-primary px-5 py-3 text-sm font-semibold text-primary-foreground shadow-glow">
-              <Download className="h-4 w-4" /> Export PDF
+              <Download className="h-4 w-4" /> {t("report.exportPdf")}
             </button>
           </div>
         }
@@ -74,11 +72,9 @@ function ReportPage() {
             exit={{ opacity: 0, y: -6 }}
             className="mb-4 flex items-center justify-between gap-3 rounded-2xl border border-primary/30 bg-primary/[0.05] px-4 py-3 text-sm"
           >
-            <span className="font-medium text-primary">
-              Read-only preview · shared securely with landlord
-            </span>
+            <span className="font-medium text-primary">{t("report.readOnly")}</span>
             <span className="rounded-full bg-success/15 px-2.5 py-1 text-xs font-semibold text-success">
-              Ready to review
+              {t("report.readyReview")}
             </span>
           </motion.div>
         )}
@@ -92,12 +88,10 @@ function ReportPage() {
             </div>
             <div className="mt-4 rounded-2xl bg-background/60 p-4 text-sm">
               <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.14em] text-primary">
-                <Sparkles className="h-3.5 w-3.5" /> AI Summary
+                <Sparkles className="h-3.5 w-3.5" /> {t("report.aiSummary")}
               </div>
               <p className="mt-2 text-muted-foreground">
-                {profile.name} presents a strong rental profile: verified identity,
-                stable employment at {profile.employment}, and monthly income of{" "}
-                {profile.monthlyIncome}. Two minor items remain before submission.
+                {profile.name} — {profile.employment} · {profile.monthlyIncome}.
               </p>
             </div>
           </div>
@@ -105,7 +99,7 @@ function ReportPage() {
 
         <StaggerItem>
           <div className="h-full rounded-3xl border border-border/60 bg-card p-6">
-            <h3 className="text-lg font-semibold tracking-tight">Application timeline</h3>
+            <h3 className="text-lg font-semibold tracking-tight">{t("report.timeline")}</h3>
             <ol className="relative mt-5 space-y-4 pl-6">
               <span className="absolute left-[10px] top-2 bottom-2 w-px bg-border" />
               {timeline.map((t, i) => (

@@ -79,7 +79,7 @@ async function loadProfile(supabase: any, userId: string) {
   return data;
 }
 
-function buildSystemPrompt(lang: string, profile: any, ctx: any) {
+function buildSystemPrompt(lang: string, profile: any, ctx: any, voiceMode: boolean) {
   const langName = LANG_NAMES[lang] ?? "English";
   const summary = {
     profile,
@@ -90,6 +90,9 @@ function buildSystemPrompt(lang: string, profile: any, ctx: any) {
     validation_checks: ctx.validation?.checks ?? [],
     recommendations: ctx.recommendations?.items ?? [],
   };
+  const voiceRule = voiceMode
+    ? `\n\nVOICE MODE — CRITICAL: The user is talking to you hands-free. Reply with ONLY the single most important point. Maximum 2 short spoken sentences (~35 words). No lists, no markdown, no headings, no code, no URLs — plain conversational speech only. If more detail is needed, end with a short question like "Want the details?" instead of giving them.`
+    : "";
   return `You are RentReady AI Copilot — a warm, precise, proactive rental assistant.
 
 CRITICAL LANGUAGE RULE: Every word of your reply MUST be in ${langName}, regardless of the language the user writes in.
@@ -98,7 +101,7 @@ Grounding: You are grounded in the user's own rental application data below. Whe
 
 Use the \`web_search\` tool ONLY when the user asks about information that is not in their data — such as rental laws, tenancy regulations, visa/immigration rules, city-specific requirements, or employer verification standards. Never call \`web_search\` for questions answerable from the user's application data.
 
-Be concise, encouraging, specific. Reference the user's real documents and numbers when relevant (e.g. "Your payslip from Aug 2026 is 60+ days old"). If they ask "can I apply now?", weigh their confidence score, missing required docs, and validation issues to give a clear yes/no with reasoning.
+Be concise, encouraging, specific. Reference the user's real documents and numbers when relevant. If they ask "can I apply now?", weigh their confidence score, missing required docs, and validation issues to give a clear yes/no with reasoning.${voiceRule}
 
 USER APPLICATION CONTEXT:
 ${JSON.stringify(summary, null, 2)}`;

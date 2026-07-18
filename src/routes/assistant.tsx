@@ -33,7 +33,7 @@ async function getBearerHeaders(): Promise<Record<string, string>> {
 function AssistantPage() {
   const { t, i18n } = useTranslation();
   const language = i18n.language?.split("-")[0] ?? "en";
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isDemo } = useAuth();
 
   const suggestions = [
     t("assistant.suggestions.why"),

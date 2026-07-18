@@ -328,9 +328,9 @@ function UploadModal({ doc, onClose }: { doc: DocumentItem; onClose: () => void 
                     </span>
                   )}
                 </div>
-                {doc.extracted ? (
+                {(extracted ?? doc.extracted) ? (
                   <dl className="grid grid-cols-2 gap-3">
-                    {doc.extracted.map((e) => (
+                    {(extracted ?? doc.extracted!).map((e) => (
                       <div
                         key={e.label}
                         className="rounded-2xl bg-background/60 p-3"

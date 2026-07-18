@@ -102,9 +102,9 @@ function ReportPage() {
             <h3 className="text-lg font-semibold tracking-tight">{t("report.timeline")}</h3>
             <ol className="relative mt-5 space-y-4 pl-6">
               <span className="absolute left-[10px] top-2 bottom-2 w-px bg-border" />
-              {timeline.map((t, i) => (
+              {timeline.map((step, i) => (
                 <motion.li
-                  key={t.name}
+                  key={step.name}
                   initial={{ opacity: 0, x: -8 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.05 * i }}
@@ -113,16 +113,14 @@ function ReportPage() {
                   <span
                     className={
                       "absolute -left-6 top-0.5 grid h-5 w-5 place-items-center rounded-full " +
-                      (t.done
-                        ? "bg-success text-success-foreground"
-                        : "bg-muted text-muted-foreground")
+                      (step.done ? "bg-success text-success-foreground" : "bg-muted text-muted-foreground")
                     }
                   >
-                    {t.done ? <CheckCircle2 className="h-3.5 w-3.5" /> : <Circle className="h-3 w-3" />}
+                    {step.done ? <CheckCircle2 className="h-3.5 w-3.5" /> : <Circle className="h-3 w-3" />}
                   </span>
                   <div className="flex items-center justify-between gap-3">
-                    <div className="text-sm font-semibold">{t.name}</div>
-                    <div className="text-xs text-muted-foreground">{t.date}</div>
+                    <div className="text-sm font-semibold">{step.name}</div>
+                    <div className="text-xs text-muted-foreground">{step.date}</div>
                   </div>
                 </motion.li>
               ))}
@@ -134,18 +132,18 @@ function ReportPage() {
           <div className="grid gap-4 md:grid-cols-[1fr_1.2fr]">
             <div className="rounded-3xl border border-border/60 bg-card p-6">
               <div className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.14em] text-primary">
-                <Sparkles className="h-3.5 w-3.5" /> Confidence radar
+                <Sparkles className="h-3.5 w-3.5" /> {t("report.radar")}
               </div>
               <ConfidenceRadar />
             </div>
             <div className="rounded-3xl border border-border/60 bg-card p-6">
               <div className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.14em] text-primary">
-                <Sparkles className="h-3.5 w-3.5" /> Before AI · After AI
+                <Sparkles className="h-3.5 w-3.5" /> {t("report.beforeAfter")}
               </div>
               <div className="mt-4 space-y-5">
                 {[
-                  { label: "Before AI review", value: 74, tone: "muted" },
-                  { label: "After AI review", value: confidence, tone: "primary" },
+                  { label: t("report.before"), value: 74, tone: "muted" },
+                  { label: t("report.after"), value: confidence, tone: "primary" },
                 ].map((row) => (
                   <div key={row.label}>
                     <div className="mb-1.5 flex items-center justify-between text-sm">

@@ -79,7 +79,7 @@ async function loadProfile(supabase: any, userId: string) {
   return data;
 }
 
-function buildSystemPrompt(lang: string, profile: any, ctx: any) {
+function buildSystemPrompt(lang: string, profile: any, ctx: any, voiceMode: boolean) {
   const langName = LANG_NAMES[lang] ?? "English";
   const summary = {
     profile,
@@ -90,6 +90,9 @@ function buildSystemPrompt(lang: string, profile: any, ctx: any) {
     validation_checks: ctx.validation?.checks ?? [],
     recommendations: ctx.recommendations?.items ?? [],
   };
+  const voiceRule = voiceMode
+    ? `\n\nVOICE MODE — CRITICAL: The user is talking to you hands-free. Reply with ONLY the single most important point. Maximum 2 short spoken sentences (~35 words). No lists, no markdown, no headings, no code, no URLs — plain conversational speech only. If more detail is needed, end with a short question like "Want the details?" instead of giving them.`
+    : "";
   return `You are RentReady AI Copilot — a warm, precise, proactive rental assistant.
 
 CRITICAL LANGUAGE RULE: Every word of your reply MUST be in ${langName}, regardless of the language the user writes in.
@@ -98,7 +101,7 @@ Grounding: You are grounded in the user's own rental application data below. Whe
 
 Use the \`web_search\` tool ONLY when the user asks about information that is not in their data — such as rental laws, tenancy regulations, visa/immigration rules, city-specific requirements, or employer verification standards. Never call \`web_search\` for questions answerable from the user's application data.
 
-Be concise, encouraging, specific. Reference the user's real documents and numbers when relevant (e.g. "Your payslip from Aug 2026 is 60+ days old"). If they ask "can I apply now?", weigh their confidence score, missing required docs, and validation issues to give a clear yes/no with reasoning.
+Be concise, encouraging, specific. Reference the user's real documents and numbers when relevant. If they ask "can I apply now?", weigh their confidence score, missing required docs, and validation issues to give a clear yes/no with reasoning.${voiceRule}
 
 USER APPLICATION CONTEXT:
 ${JSON.stringify(summary, null, 2)}`;
@@ -135,6 +138,7 @@ export const Route = createFileRoute("/api/chat")({
         const body = (await request.json()) as {
           messages?: UIMessage[];
           language?: string;
+          voiceMode?: boolean;
         };
         if (!Array.isArray(body.messages)) {
           return new Response("Messages required", { status: 400 });
@@ -143,6 +147,7 @@ export const Route = createFileRoute("/api/chat")({
         if (!key) return new Response("Missing LOVABLE_API_KEY", { status: 500 });
 
         const lang = body.language ?? "en";
+        const voiceMode = body.voiceMode === true;
         const gateway = createLovableAiGatewayProvider(key);
 
         let system: string;
@@ -153,10 +158,11 @@ export const Route = createFileRoute("/api/chat")({
             loadContext(authed.supabase, authed.userId),
           ]);
           appId = ctx.app?.id ?? null;
-          system = buildSystemPrompt(lang, profile, ctx);
+          system = buildSystemPrompt(lang, profile, ctx, voiceMode);
         } else {
           const langName = LANG_NAMES[lang] ?? "English";
-          system = `You are RentReady AI Copilot. Always respond in ${langName}. The user is not signed in — encourage them to sign in so you can access their real rental application data.`;
+          const voiceRule = voiceMode ? " Reply in 1-2 short spoken sentences, plain conversational speech only." : "";
+          system = `You are RentReady AI Copilot. Always respond in ${langName}. The user is not signed in — encourage them to sign in so you can access their real rental application data.${voiceRule}`;
         }
 
         const result = streamText({

@@ -30,10 +30,10 @@ export const Route = createFileRoute("/")({
         content:
           "RentReady AI prepares complete, verified rental applications so you apply with total confidence.",
       },
-      { property: "og:title", content: "RentReady AI" },
+      { property: "og:title", content: "RentReady AI — Your rental application copilot" },
       {
         property: "og:description",
-        content: "Your AI-powered rental application copilot.",
+        content: "RentReady AI prepares complete, verified rental applications so you apply with total confidence.",
       },
     ],
   }),

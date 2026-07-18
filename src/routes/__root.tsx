@@ -77,19 +77,23 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "RentReady AI — Your AI rental application copilot" },
+      { title: "RentReady AI — Your rental application copilot" },
       {
         name: "description",
         content:
-          "RentReady AI helps renters prepare complete, verified rental applications with confidence — powered by an AI copilot.",
+          "RentReady AI prepares complete, verified rental applications so you apply with total confidence.",
       },
-      { property: "og:title", content: "RentReady AI" },
+      { property: "og:title", content: "RentReady AI — Your rental application copilot" },
       {
         property: "og:description",
-        content: "Your AI-powered rental application copilot.",
+        content: "RentReady AI prepares complete, verified rental applications so you apply with total confidence.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:title", content: "RentReady AI — Your rental application copilot" },
+      { name: "twitter:description", content: "RentReady AI prepares complete, verified rental applications so you apply with total confidence." },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/17e62285-b4d7-4e5c-a9ef-a0fe17621594/id-preview-c8b220b8--855d8da1-8e51-4392-829d-abc992ce4a2d.lovable.app-1784402577411.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/17e62285-b4d7-4e5c-a9ef-a0fe17621594/id-preview-c8b220b8--855d8da1-8e51-4392-829d-abc992ce4a2d.lovable.app-1784402577411.png" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },

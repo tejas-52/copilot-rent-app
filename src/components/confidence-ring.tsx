@@ -52,8 +52,8 @@ export function ConfidenceRing({
       <svg width={size} height={size} className="-rotate-90">
         <defs>
           <linearGradient id="ring-grad" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stopColor="oklch(0.62 0.22 262)" />
-            <stop offset="100%" stopColor="oklch(0.75 0.17 250)" />
+            <stop offset="0%" stopColor="#2563EB" />
+            <stop offset="100%" stopColor="#3B82F6" />
           </linearGradient>
         </defs>
         <circle

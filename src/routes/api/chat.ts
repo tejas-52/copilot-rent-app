@@ -138,6 +138,7 @@ export const Route = createFileRoute("/api/chat")({
         const body = (await request.json()) as {
           messages?: UIMessage[];
           language?: string;
+          voiceMode?: boolean;
         };
         if (!Array.isArray(body.messages)) {
           return new Response("Messages required", { status: 400 });
@@ -146,6 +147,7 @@ export const Route = createFileRoute("/api/chat")({
         if (!key) return new Response("Missing LOVABLE_API_KEY", { status: 500 });
 
         const lang = body.language ?? "en";
+        const voiceMode = body.voiceMode === true;
         const gateway = createLovableAiGatewayProvider(key);
 
         let system: string;
@@ -156,10 +158,11 @@ export const Route = createFileRoute("/api/chat")({
             loadContext(authed.supabase, authed.userId),
           ]);
           appId = ctx.app?.id ?? null;
-          system = buildSystemPrompt(lang, profile, ctx);
+          system = buildSystemPrompt(lang, profile, ctx, voiceMode);
         } else {
           const langName = LANG_NAMES[lang] ?? "English";
-          system = `You are RentReady AI Copilot. Always respond in ${langName}. The user is not signed in — encourage them to sign in so you can access their real rental application data.`;
+          const voiceRule = voiceMode ? " Reply in 1-2 short spoken sentences, plain conversational speech only." : "";
+          system = `You are RentReady AI Copilot. Always respond in ${langName}. The user is not signed in — encourage them to sign in so you can access their real rental application data.${voiceRule}`;
         }
 
         const result = streamText({

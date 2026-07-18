@@ -14,6 +14,86 @@ export type Database = {
   }
   public: {
     Tables: {
+      agent_credentials: {
+        Row: {
+          created_at: string
+          host: string
+          id: string
+          label: string | null
+          password_ciphertext: string
+          updated_at: string
+          user_id: string
+          username: string
+        }
+        Insert: {
+          created_at?: string
+          host: string
+          id?: string
+          label?: string | null
+          password_ciphertext: string
+          updated_at?: string
+          user_id: string
+          username: string
+        }
+        Update: {
+          created_at?: string
+          host?: string
+          id?: string
+          label?: string | null
+          password_ciphertext?: string
+          updated_at?: string
+          user_id?: string
+          username?: string
+        }
+        Relationships: []
+      }
+      agent_runs: {
+        Row: {
+          bb_session_id: string | null
+          created_at: string
+          credential_id: string | null
+          id: string
+          live_view_url: string | null
+          log: Json
+          status: string
+          target_url: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          bb_session_id?: string | null
+          created_at?: string
+          credential_id?: string | null
+          id?: string
+          live_view_url?: string | null
+          log?: Json
+          status?: string
+          target_url: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          bb_session_id?: string | null
+          created_at?: string
+          credential_id?: string | null
+          id?: string
+          live_view_url?: string | null
+          log?: Json
+          status?: string
+          target_url?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agent_runs_credential_id_fkey"
+            columns: ["credential_id"]
+            isOneToOne: false
+            referencedRelation: "agent_credentials"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       applications: {
         Row: {
           confidence_score: number | null

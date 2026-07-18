@@ -72,7 +72,7 @@ function greet() {
 
 function Dashboard() {
   const recent = documents.filter((d) => d.status === "verified").slice(0, 3);
-  const missing = documents.filter((d) => d.status !== "verified");
+
 
   return (
     <AppLayout>

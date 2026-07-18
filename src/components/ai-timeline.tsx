@@ -3,9 +3,22 @@ import { Check, Sparkles } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-export function AITimeline({ onComplete }: { onComplete?: () => void }) {
+export type AITimelineStep = {
+  label: string;
+  result: string;
+  /** If already done, the row shows the result immediately without animating. */
+  done?: boolean;
+};
+
+export function AITimeline({
+  steps: stepsProp,
+  onComplete,
+}: {
+  steps?: AITimelineStep[];
+  onComplete?: () => void;
+}) {
   const { t } = useTranslation();
-  const steps = useMemo(
+  const fallback = useMemo<AITimelineStep[]>(
     () => [
       { label: t("ai.steps.readPassport"), result: t("ai.results.passportDetected") },
       { label: t("ai.steps.readEmployment"), result: t("ai.results.salaryVerified") },
@@ -14,8 +27,10 @@ export function AITimeline({ onComplete }: { onComplete?: () => void }) {
     ],
     [t],
   );
-  const [i, setI] = useState(0);
-  const [done, setDone] = useState(false);
+  const steps = stepsProp && stepsProp.length > 0 ? stepsProp : fallback;
+  const allPreDone = steps.every((s) => s.done);
+  const [i, setI] = useState(allPreDone ? steps.length : 0);
+  const [done, setDone] = useState(allPreDone);
 
   useEffect(() => {
     if (done) return;
@@ -57,13 +72,12 @@ export function AITimeline({ onComplete }: { onComplete?: () => void }) {
         )}
       </div>
 
-
       <ol className="space-y-2.5">
         {steps.map((s, idx) => {
-          const state = idx < i ? "done" : idx === i ? "active" : "idle";
+          const state = s.done || idx < i ? "done" : idx === i ? "active" : "idle";
           return (
             <li
-              key={s.label}
+              key={s.label + idx}
               className={
                 "rounded-2xl border p-3 transition-colors " +
                 (state === "active"

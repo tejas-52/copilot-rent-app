@@ -153,7 +153,7 @@ function AssistantPage() {
                   }
                 }}
                 rows={1}
-                placeholder="Ask about your application…"
+                placeholder={t("assistant.placeholder")}
                 className="max-h-32 min-h-9 flex-1 resize-none bg-transparent px-3 py-2 text-sm outline-none placeholder:text-muted-foreground"
               />
               <button
@@ -170,7 +170,7 @@ function AssistantPage() {
 
         <div className="space-y-2 rounded-3xl border border-border/60 bg-card p-4">
           <div className="flex items-center gap-2 px-2 pb-2 text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-            <Bot className="h-3.5 w-3.5" /> Try asking
+            <Bot className="h-3.5 w-3.5" /> {t("assistant.tryAsking")}
           </div>
           {suggestions.map((s) => (
             <button

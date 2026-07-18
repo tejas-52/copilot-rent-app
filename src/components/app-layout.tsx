@@ -165,14 +165,15 @@ export function AppLayout({ children }: { children?: ReactNode }) {
 
 function FloatingAI() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const isMobile = useIsMobile();
   if (pathname === "/assistant") return null;
   return (
     <Link
       to="/assistant"
       aria-label="Open AI assistant"
-      className="fixed right-4 z-50 grid h-14 w-14 place-items-center rounded-full text-primary-foreground breathe md:right-8 md:bottom-8"
+      className="fixed right-4 z-50 grid h-14 w-14 place-items-center rounded-full text-primary-foreground breathe md:right-8"
       style={{
-        bottom: "calc(env(safe-area-inset-bottom) + 76px)",
+        bottom: isMobile ? "calc(env(safe-area-inset-bottom) + 76px)" : "2rem",
         background: "linear-gradient(135deg, #2563EB, #3B82F6)",
       }}
     >
@@ -186,4 +187,5 @@ function FloatingAI() {
     </Link>
   );
 }
+
 

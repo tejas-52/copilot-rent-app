@@ -124,6 +124,25 @@ function Dashboard() {
                   Estimated completion · about 40 seconds
                 </div>
 
+                <div className="mt-5 grid grid-cols-2 gap-2 rounded-2xl border border-border/50 bg-background/60 p-3 sm:grid-cols-4">
+                  {heroChecklist.map((c) => (
+                    <div key={c.name} className="flex items-center gap-2 text-xs">
+                      {c.done ? (
+                        <CheckCircle2 className="h-4 w-4 text-success" />
+                      ) : (
+                        <motion.span
+                          animate={{ scale: [1, 1.15, 1], opacity: [0.7, 1, 0.7] }}
+                          transition={{ duration: 1.6, repeat: Infinity }}
+                          className="h-2 w-2 rounded-full bg-primary"
+                        />
+                      )}
+                      <span className={c.done ? "text-foreground" : "text-primary font-semibold"}>
+                        {c.name}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+
                 <div className="mt-5 flex flex-wrap gap-2">
                   <Link
                     to="/documents"
@@ -144,6 +163,10 @@ function Dashboard() {
           </div>
         </StaggerItem>
 
+        {/* Signature: AI processing timeline */}
+        <StaggerItem>
+          <AITimeline />
+        </StaggerItem>
 
         {/* Journey */}
         <StaggerItem>

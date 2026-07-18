@@ -1,15 +1,20 @@
-import { Link, Outlet, useRouterState } from "@tanstack/react-router";
+import { Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
 import { motion } from "framer-motion";
 import {
   Bot,
   FileCheck2,
   FolderOpen,
   Home as HomeIcon,
+  LogOut,
+  Settings as SettingsIcon,
   Sparkles,
   User,
 } from "lucide-react";
 import type { ReactNode } from "react";
+import { toast } from "sonner";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useAuth } from "@/lib/auth-context";
+import { AuthGate } from "@/components/auth-gate";
 
 const nav = [
   { to: "/", label: "Home", icon: HomeIcon, exact: true },

@@ -10,8 +10,9 @@ import {
   Upload,
   X,
 } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
+import { useTranslation } from "react-i18next";
 import { AppLayout } from "@/components/app-layout";
 import { SectionHeader, Stagger, StaggerItem } from "@/components/ui-bits";
 import { documents, type DocStatus, type DocumentItem } from "@/lib/app-data";
@@ -32,30 +33,19 @@ export const Route = createFileRoute("/documents")({
   component: DocumentsPage,
 });
 
-const statusMeta: Record<
-  DocStatus,
-  { label: string; className: string; icon: typeof CheckCircle2 }
-> = {
-  verified: {
-    label: "Verified",
-    className: "bg-success/15 text-success",
-    icon: CheckCircle2,
-  },
-  pending: {
-    label: "Pending",
-    className: "bg-muted text-muted-foreground",
-    icon: Clock,
-  },
-  issue: {
-    label: "Needs attention",
-    className: "bg-warning/15 text-warning-foreground",
-    icon: AlertTriangle,
-  },
-  missing: { label: "Not uploaded", className: "bg-accent text-accent-foreground", icon: Circle },
-};
+function useStatusMeta(): Record<DocStatus, { label: string; className: string; icon: typeof CheckCircle2 }> {
+  const { t } = useTranslation();
+  return {
+    verified: { label: t("common.verified"), className: "bg-success/15 text-success", icon: CheckCircle2 },
+    pending: { label: t("common.pending"), className: "bg-muted text-muted-foreground", icon: Clock },
+    issue: { label: t("common.needsAttention"), className: "bg-warning/15 text-warning-foreground", icon: AlertTriangle },
+    missing: { label: t("common.notUploaded"), className: "bg-accent text-accent-foreground", icon: Circle },
+  };
+}
 
 function DocCard({ doc, onOpen }: { doc: DocumentItem; onOpen: (d: DocumentItem) => void }) {
-  const s = statusMeta[doc.status];
+  const { t } = useTranslation();
+  const s = useStatusMeta()[doc.status];
   const Icon = doc.icon;
   const SIcon = s.icon;
   const shell =
@@ -90,10 +80,10 @@ function DocCard({ doc, onOpen }: { doc: DocumentItem; onOpen: (d: DocumentItem)
       <div className="mt-auto pt-5">
         <div className="text-base font-semibold tracking-tight">{doc.name}</div>
         <div className="mt-1 text-xs text-muted-foreground">
-          {doc.status === "verified" && `${doc.confidence}% confidence`}
-          {doc.status === "pending" && "Analyzing…"}
+          {doc.status === "verified" && `${doc.confidence}% ${t("common.confidence").toLowerCase()}`}
+          {doc.status === "pending" && t("documents.analyzing")}
           {doc.status === "issue" && doc.issue}
-          {doc.status === "missing" && "Tap to upload"}
+          {doc.status === "missing" && t("documents.tapToUpload")}
         </div>
       </div>
     </button>
@@ -101,15 +91,18 @@ function DocCard({ doc, onOpen }: { doc: DocumentItem; onOpen: (d: DocumentItem)
 }
 
 
-const readingSteps = [
-  "Reading document…",
-  "Extracting information…",
-  "Checking authenticity…",
-  "Cross-referencing profile…",
-  "Identity verified",
-];
-
 function UploadModal({ doc, onClose }: { doc: DocumentItem; onClose: () => void }) {
+  const { t } = useTranslation();
+  const readingSteps = useMemo(
+    () => [
+      t("documents.steps.reading"),
+      t("documents.steps.extracting"),
+      t("documents.steps.checking"),
+      t("documents.steps.crossReferencing"),
+      t("documents.steps.identityVerified"),
+    ],
+    [t],
+  );
   const [phase, setPhase] = useState<"drop" | "reading" | "done">(
     doc.status === "missing" || doc.status === "pending" ? "drop" : "done",
   );

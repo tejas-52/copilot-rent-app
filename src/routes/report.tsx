@@ -137,6 +137,52 @@ function ReportPage() {
         </StaggerItem>
 
         <StaggerItem className="md:col-span-2">
+          <div className="grid gap-4 md:grid-cols-[1fr_1.2fr]">
+            <div className="rounded-3xl border border-border/60 bg-card p-6">
+              <div className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.14em] text-primary">
+                <Sparkles className="h-3.5 w-3.5" /> Confidence radar
+              </div>
+              <ConfidenceRadar />
+            </div>
+            <div className="rounded-3xl border border-border/60 bg-card p-6">
+              <div className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.14em] text-primary">
+                <Sparkles className="h-3.5 w-3.5" /> Before AI · After AI
+              </div>
+              <div className="mt-4 space-y-5">
+                {[
+                  { label: "Before AI review", value: 74, tone: "muted" },
+                  { label: "After AI review", value: confidence, tone: "primary" },
+                ].map((row) => (
+                  <div key={row.label}>
+                    <div className="mb-1.5 flex items-center justify-between text-sm">
+                      <span className="text-muted-foreground">{row.label}</span>
+                      <span className="font-semibold tabular-nums">{row.value}%</span>
+                    </div>
+                    <div className="h-3 overflow-hidden rounded-full bg-muted">
+                      <motion.div
+                        initial={{ width: 0 }}
+                        animate={{ width: `${row.value}%` }}
+                        transition={{ duration: 1.2, ease: [0.2, 0.8, 0.2, 1] }}
+                        className={
+                          "h-full rounded-full " +
+                          (row.tone === "primary"
+                            ? "gradient-primary shadow-glow"
+                            : "bg-muted-foreground/30")
+                        }
+                      />
+                    </div>
+                  </div>
+                ))}
+                <div className="rounded-2xl bg-success/10 p-3 text-sm text-success">
+                  <span className="font-semibold">+{confidence - 74}%</span> uplift after
+                  AI cleaned up documents, spotted issues, and structured your profile.
+                </div>
+              </div>
+            </div>
+          </div>
+        </StaggerItem>
+
+        <StaggerItem className="md:col-span-2">
           <div className="rounded-3xl border border-border/60 bg-card p-6">
             <h3 className="text-lg font-semibold tracking-tight">Application summary</h3>
             <dl className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-4">

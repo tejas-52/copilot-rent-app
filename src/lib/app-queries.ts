@@ -421,6 +421,4 @@ export function useAppState() {
   });
 }
 
-export function useEmptyAppState(): AppState {
-  return EMPTY_STATE;
-}
+export const emptyAppState: AppState = EMPTY_STATE;

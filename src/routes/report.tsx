@@ -4,12 +4,15 @@ import {
   CheckCircle2,
   Circle,
   Download,
+  Eye,
   FileText,
   Sparkles,
 } from "lucide-react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
+import { useState } from "react";
 import { AppLayout } from "@/components/app-layout";
 import { ConfidenceRing } from "@/components/confidence-ring";
+import { ConfidenceRadar } from "@/components/confidence-radar";
 import { SectionHeader, Stagger, StaggerItem } from "@/components/ui-bits";
 import {
   confidence,

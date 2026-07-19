@@ -14,7 +14,6 @@ import { useState, type FormEvent, useMemo } from "react";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/lib/auth-context";
-import { LanguageSwitcher } from "@/components/language-switcher";
 
 export const Route = createFileRoute("/auth/signup")({
   head: () => ({
@@ -95,16 +94,7 @@ function SignupPage() {
   };
 
   return (
-    <div className="relative min-h-dvh bg-background">
-      <div
-        aria-hidden
-        className="pointer-events-none fixed inset-0 -z-10"
-        style={{ background: "var(--gradient-glow)" }}
-      />
-      <div className="absolute right-4 top-4 z-10">
-        <LanguageSwitcher />
-      </div>
-
+    <>
       {/* ---------- Split layout ---------- */}
       <div className="mx-auto grid min-h-dvh w-full max-w-[1400px] grid-cols-1 lg:grid-cols-2">
         {/* Hero (left) */}
@@ -314,7 +304,7 @@ function SignupPage() {
           </motion.div>
         </div>
       </div>
-    </div>
+    </>
   );
 }
 
